@@ -1,0 +1,22 @@
+<!-- Describes feed sources -->
+<!-- updateinterval in hours, for like 0.5 for 30 mins -->
+<!-- Author: Srikanth Sombhatla -->
+<sources>
+	<source>
+	<feedurl>http://mobile.engadget.com/rss.xml</feedurl>
+	<updateinterval>2</updateinterval>
+	<usekeys>true</usekeys>
+	</source>
+	
+	<source>
+	<feedurl>http://labs.trolltech.com/blogs/feed/</feedurl>
+	<updateinterval>6</updateinterval>
+	<usekeys>false</usekeys>
+	</source>
+
+	<source>
+	<feedurl>http://developer.qt.nokia.com/feeds/forum/6</feedurl>
+	<updateinterval>6</updateinterval>
+	<usekeys>false</usekeys>
+	</source>
+</sources>

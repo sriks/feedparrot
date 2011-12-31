@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- generator="wordpress/2.1.2" -->
+<rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	>
+
+<channel>
+	<title>Qt Labs Blogs</title>
+	<link>http://labs.trolltech.com/blogs</link>
+	<description>the ramblings of engineers</description>
+	<pubDate>Tue, 24 Aug 2010 15:25:03 +0000</pubDate>
+	<generator>http://wordpress.org/?v=2.1.2</generator>
+	<language>en</language>
+			<item>
+		<title>Improving the rendering performance with more SIMD</title>
+		<link>http://labs.trolltech.com/blogs/2010/08/24/improving-the-rendering-performance-with-more-simd/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/08/24/improving-the-rendering-performance-with-more-simd/#comments</comments>
+		<pubDate>Tue, 24 Aug 2010 11:29:17 +0000</pubDate>
+		<dc:creator>Benjamin</dc:creator>
+		
+		<category><![CDATA[Painting]]></category>
+
+		<category><![CDATA[Performance]]></category>
+
+		<category><![CDATA[C++]]></category>
+
+		<category><![CDATA[Assembly]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/08/24/improving-the-rendering-performance-with-more-simd/</guid>
+		<description><![CDATA[With the last two versions of Qt, we consistently improved performance. Qt 4.5 introduced pluggable graphics systems and numerous rendering optimizations. Qt 4.6 brought optimizations all over the place, and the performance on embedded improved continuously with each patch release.
+A problem with increasing the speed all the time is that we fall short on ways [...]]]></description>
+			<content:encoded><![CDATA[<p>With the last two versions of Qt, we consistently improved performance. Qt 4.5 introduced <a href="http://labs.trolltech.com/blogs/2008/10/22/so-long-and-thanks-for-the-blit/">pluggable graphics systems</a> and numerous rendering optimizations. Qt 4.6 brought optimizations all over the place, and the performance on embedded improved continuously with each patch release.</p>
+<p>A problem with increasing the speed all the time is that we fall short on ways to improve for the next iterations. We have to look for new areas of improvement, and once again we are making Qt 4.7 faster than its predecessors.</p>
+<h3>Single instruction, multiple data</h3>
+<p>One of ways we used to get Qt 4.7 faster than its predecessor is using the processors more effectively. Modern processors have ways to execute an instruction on multiple data at a time. This is called single instruction, multiple data: <a href="http://en.wikipedia.org/wiki/SIMD">SIMD</a>. In particular, recent x86 processors have SSE extensions, while ARM Cortex have Neon.</p>
+<p>The principle is simple. Let&#8217;s see a use case were we have simple operations operating on multiple data:</p>
+<p><code>quint32 a[256];<br />
+quint32 b[256];<br />
+quint32 c[256];<br />
+// [...]</code></p>
+<p>for (int i = 0; i &lt; 256; ++i) {<br />
+c[i] = a[i] + b[i];<br />
+}<br />
+On processors supporting SIMD, this code can be improved by applying the instructions on multiple data. For example, with SSE2, the following code loads 4 data at a time, applies the + operation, and stores the value in c:</p>
+<p><code>quint32 a[256];<br />
+quint32 b[256];<br />
+quint32 c[256];<br />
+// [...]</code></p>
+<p>for (int i = 0; i &lt; 256; i += 4) {<br />
+__m128i vectorA = _mm_loadu_si128((__m128i*)&amp;a[i]);<br />
+__m128i vectorB = _mm_loadu_si128((__m128i*)&amp;b[i]);<br />
+__m128i vectorC = _mm_add_epi32(vectorA, vectorB);<br />
+_mm_storeu_si128((__m128i*)&amp;c[i], vectorC);<br />
+}<br />
+The code above contains instrinsics which the compiler replaces with SSE2 instructions.</p>
+<p>This example is so simple the compiler can optimize it automatically when passed the right options. But in most real cases, the change is not that obvious, and the algorithm needs to be slightly modified to work with vectors.</p>
+<p>Qt has used SIMD for a long time, using MMX and 3DNow! for example. In Qt 4.7, we extended our usage of SSE on x86, and of Neon on ARM Cortex processors. By using SIMD in more places, we&#8217;ve gained between 2 and 4 times the speed in some uses cases.</p>
+<h3>Improving raster</h3>
+<p>In Qt 4.7, lots of rendering primitives have been reimplemented using SSE and Neon. This affects the raster graphics system in a very positive way.</p>
+<p>The functions rewritten for SIMD are generally 2 to 4 times faster than the generic implementation. Microbenchmarks can be misleading, so to measure the impact on a realistic use case, I&#8217;ve used the <a href="http://labs.trolltech.com/blogs/2010/02/02/how-to-improve-webkit-performance/">WebKit benchmark suite</a>.</p>
+<p>On the &#8220;scrolling&#8221; test, we load over the top 50 most visited web pages and scroll them up and down. For this test I get the following improvement compared to Qt 4.6 compiled without any SIMD:<br />
+<a href="http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/render_perf_x86.png" title="Performance improvement of Qt 4.7"><img src="http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/render_perf_x86.png" alt="Performance improvement of Qt 4.7" /></a></p>
+<p>The tests have been run with the same version of QtWebKit (WebKit trunk) in all cases to remove the influence of the improvements done in the engine.</p>
+<h3>Compiling with SIMD</h3>
+<p>You do not have to do anything special to enjoy those improvements of Qt. When you build Qt, the configure script detects which features are supported by the compiler. You can see which extension are supported in the summary printed on the command line.</p>
+<p>Supporting the CPU extensions at compile time does not mean they will be used. When an application starts, Qt detects what is available, and sets up the fastest functions available for the current processor.</p>
+<p>With more SSE, we have more code sensitive to alignment. Unfortunately, some compilers have bugs regarding the alignment of vectors. Having a recent compiler is a good idea to get the best performance, while avoiding crashes.</p>
+<h3>Future</h3>
+<p>We are not done with improvements just yet. The most common functions have been optimized, but lots of less common paths can also be improved. For the last month, every week I think I am almost done, and Andreas pokes me with a new interesting use case. Those improvement are making their way to the 4.7 branch, and you can already expect 4.7.1 to be a little faster than the upcoming Qt 4.7.0.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/08/24/improving-the-rendering-performance-with-more-simd/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>A Guide to Writing Games with QML</title>
+		<link>http://labs.trolltech.com/blogs/2010/08/12/a-guide-to-writing-games-with-qml/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/08/12/a-guide-to-writing-games-with-qml/#comments</comments>
+		<pubDate>Thu, 12 Aug 2010 09:27:19 +0000</pubDate>
+		<dc:creator>Alan Alpert</dc:creator>
+		
+		<category><![CDATA[Qt]]></category>
+
+		<category><![CDATA[Declarative UI]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/08/12/a-guide-to-writing-games-with-qml/</guid>
+		<description><![CDATA[My last post on QML had a lot of people asking for an example, as opposed to a general discourse. In my opinion, if you want concrete examples you need to move from blogs into real code. Given that I have written a, hopefully simple, application demonstrating the points in my last post (designing C++ [...]]]></description>
+			<content:encoded><![CDATA[<p>My last post on QML had a lot of people asking for an example, as opposed to a general discourse. In my opinion, if you want concrete examples you need to move from blogs into real code. Given that I have written a, hopefully simple, application demonstrating the points in my last post (designing C++ code for QML use), this post (writing games with QML), and the next QML post I plan to write (QML&#8217;s versioning system, when I&#8217;ll use version 2 of this example). It&#8217;s a C++ module containing word-game related logic designed for use from QML, plus a QML game using it, and they can be found in the <a href="http://gitorious.org/qt-qml-demo-playground">qt-qml-demo-playground repository</a> in the wordgame and longwords folders, respectively. They are merely intended to provide some concrete examples, and you don&#8217;t have to play with them before reading the rest of this post (but it is a game, so you can <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_smile.gif' alt=':)' class='wp-smiley' /> ). Now onto the topic of this post, writing games with QML.</p>
+<p>QML is designed for smooth application UIs, and it does that job very well. I&#8217;ve found that it is also flexible enough to implement a game inside that UI. So for simple games, where the intuitive and smooth user interface is often as hard as the game part, QML works surprisingly well for creating the whole thing. I&#8217;m going to arbitrarily split games into two groups here: Simple games, and Complex games. Simple games being the ones that are 2D, tile-based or with very simple geometry, and with fairly simple logic. Complex games are everything else (3D, or large maps, or with complex geometry or with a lot of collision detection or physics&#8230;). Since you can do everything with QML <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_wink.gif' alt=';)' class='wp-smiley' /> you can obviously construct both types with QML. However, simple games can be easily produced using just QML and JS. If you want to just write simple games for your mobile devices, like Symbian and Meego which will in time have Qt 4.7 shipped on them, QML will likely be sufficient. </p>
+<p>Of course, the distinction I&#8217;ve drawn between simple and complex blurs more every day. Those of you who read the recent QML/3D labs blog will be quite confused by my emphasis on 2D. With QML/3D, you will be able to make simple games with 3D visuals (so long as you don&#8217;t end up having complex 3D logic too such as realistic physics), using just QML and Javascript (QML/JS). You can also make simple games with pre-existing C++ parts, like using the WordGame module, despite my grouping of C++ with complex games. You can even make complex games using my simple game formula, although that would lead to rather messy and long code. Of course in the real world they all seem simple to start with. A key point is that, with QML, you can adapt to increased complexity without having to scrap either your code or your vision to make it work.</p>
+<p>I&#8217;ll now provide a basic guide on how to put QML pieces together to form a simple QML/JS game. For further details try the <a href="http://doc.qt.nokia.com/4.7-snapshot/qml-advtutorial.html">Samegame tutorial</a> in the Qt Quick docs. Note that this isn&#8217;t a definitive guide, it&#8217;s just my rambling of how I&#8217;ve manage to do it so far.</p>
+<p>A QML/JS game, at least the ones I&#8217;ve written, have the following structure: A main file, containing a GameBoard element and the surrounding UI, a JavaScript file, containing all the game logic, and some QML elements for the game pieces (and UI elements). The main file contains the whole game UI in QML, including the game board appropriately sized and positioned. </p>
+<p>The GameBoard element is usually just an Item type, with a background image as a child. However I give it an id that I use from within the logic file, and often I set the size of the game tiles based on its size. This allows you to make that element size itself to make the most of the available space, and thus be resizeable (but this really doesn&#8217;t matter on mobile).</p>
+<p>The logic file, a .js file with all the game logic, is the imperative logic part. If you try to do something too complex without being a javascript master it gets ugly, and this is the main reason I only recommend pure QML/JS for simple games. Since it does all the imperative stuff, it follows a much more imperative flow than the QML. So I tend to have an init() in the .js called on Component.onCompleted in the main .qml, and a newGame() called from the new game button. You may also want a gameOver state in the UI, and the imperative flow from JS sets these properties (on the GameBoard object, which is preferably the only object it knows about) so that the UI can respond.</p>
+<p>The game elements, like the stones in samegame, I prefer to create from the imperative side. This means that, in the newGame() function, you create, initialize and position instances of your game pieces, from the QML files that define their look and feel, and then position them on the game board. They will also need to import the game state logic file, so as to call methods that alter the game state (when they&#8217;re clicked, for example). Last time I checked, it was safe to save state in the logic JS file, and then when the pieces or main file call the JS file, they operate on the same variables. So as long as you store all the game state in the logic JS file, and manipulate it via functions in that file, then you&#8217;ll all be operating on the same state from all your various components. An extra advantage of making the game elements separate components is easy theming. You can have a different QML file for a differently themed stone for samegame and all you need to do is switch the file loaded in the JS logic; everything else can still work if you used QML components correctly. These different elements can be more than just different images, but have different animations as well.</p>
+<p>So, to sum up, simple games can be easily written in QML/JS by combining the following three things. </p>
+<ul>
+<li>
+A central element in the UI to parent all the game items to.
+</li>
+<li>QML files defining the look and feel of the game elements, so that they can be fluid in their movements.
+</li>
+<li>A JS file with all the imperative logic and game state.
+</li>
+</ul>
+<p>Unfortunately, it&#8217;s hard to be more specific than that because every game is different. Even QML cannot come up with a brilliant game idea for you. You can check out the Samegame and Snake demos (pictured below, as examples) in the Qt demos for some examples, and the minehunt demo is similar but with the logic in a C++ plugin instead. There is also the WordGame example, mentioned above, which provides a C++ module that you can write your own QML game with as well as one game using it.<br />
+<a href='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/samegame.png' title='Samegame, all in QML and JS'><img src='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/samegame.png' alt='Samegame, all in QML and JS' /></a><br />
+<a href='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/snake.png' title='Snake, all in QML and JS'><img src='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/snake.png' alt='Snake, all in QML and JS' /></a></p>
+<p>To return to the complex games as a postscript, the way to start writing them in QML is more like the minehunt example. You do the game logic and complex parts in C++, and expose them to a QML front end.  For example, you can have the C++ just know where the &#8216;player&#8217; sprite is, do all the complex logic manipulating that position to move it, and the QML file could optionally cycle through sprites for a walking animation or not; this gives the designer a lot more flexibility. Unfortunately, there is not so great a dummy data solution for this approach as with other QML UIs. If your game is too complex for QML in the main part (for example, a modern 3D RTS or FPS with thousands of actors and realistic physics), QML would still work great for the UI overlay on top. It&#8217;s unfortunate that I don&#8217;t have the time to write an epic RTS just to prove that last point <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_smile.gif' alt=':)' class='wp-smiley' /> .</p>
+<p>The new Qt DevNet beta is great, and has forums for both <a href="http://developer.qt.nokia.com/forums/viewforum/12/">Qt Quick development</a> and <a href="http://developer.qt.nokia.com/forums/viewforum/17/">game development with Qt</a>. I recommend that comments or questions not specifically about this post go there instead of the comments on labs, as they&#8217;ll get seen a lot easier and by more people.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/08/12/a-guide-to-writing-games-with-qml/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>Apology of the NULL pointer</title>
+		<link>http://labs.trolltech.com/blogs/2010/08/11/apology-of-the-null-pointer/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/08/11/apology-of-the-null-pointer/#comments</comments>
+		<pubDate>Wed, 11 Aug 2010 21:20:26 +0000</pubDate>
+		<dc:creator>cduclos</dc:creator>
+		
+		<category><![CDATA[Uncategorized]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/08/11/apology-of-the-null-pointer/</guid>
+		<description><![CDATA[&#8220;Nobody likes me. I&#8217;m despised everywhere I go.  I am accussed of being the responsible of many problems and even calamities. Some say that I am accursed. Some even say that I am some kind of disease that needs to be cured. When people see me the first thing they think is &#8220;oh no, [...]]]></description>
+			<content:encoded><![CDATA[<p>&#8220;Nobody likes me. I&#8217;m despised everywhere I go.  I am accussed of being the responsible of many problems and even calamities. Some say that I am accursed. Some even say that I am some kind of disease that needs to be cured. When people see me the first thing they think is &#8220;oh no, not again&#8230;&#8221;. Nobody has a kind word for me. People spends hours and hours finding ways to make sure that I am not welcomed. They spend incredibly amounts of time looking for ways to avoid me, to squash me and to make sure I cannot even get close. Even worst, some people has managed to make me invisible to their eyes, so even if I appear they do not see me. If I manage to get close and say &#8220;hi&#8221;, they do not say &#8220;hi&#8221; back to me. In fact, whenever I say something people look at me very weirdly. People has been told since the beginning that I am the worst thing that could ever happen to their software.<br />
+They do not understand me. And in fact I think nobody understands me. But that is ok, because no matter what I will still be around after your software is done. I will still be around when your software becomes outdated. In fact, you can count on me being around all the time. And yet I&#8217;m not haunting you. If you just stopped for a while and listened to my message, you will see that I can be your best friend. My mission is very simple: if I appear in your software it is not a sign that your software is badly designed, I&#8217;m just pointing out a case that was not considered before. If you could just understand that sometimes it is much better that I come and say &#8220;hi&#8221; than to close the door to me, you will realize that we can work together to make your software the best software ever. So please, stop cursing me and for once try to listen to my message.&#8221;</p>
+<p>The text above was inspired by a conversation with some colleagues regarding when to detect a NULL pointer and when simply let the software crash.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/08/11/apology-of-the-null-pointer/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>Documentation dressed up and ready to serve!</title>
+		<link>http://labs.trolltech.com/blogs/2010/08/11/documentation-dressed-up-and-ready-to-serve/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/08/11/documentation-dressed-up-and-ready-to-serve/#comments</comments>
+		<pubDate>Wed, 11 Aug 2010 14:24:38 +0000</pubDate>
+		<dc:creator>Morten</dc:creator>
+		
+		<category><![CDATA[Documentation]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/08/11/documentation-dressed-up-and-ready-to-serve/</guid>
+		<description><![CDATA[Last fall I wrote a couple of blog posts about our visions for redesigning the Qt Reference Documentation. We asked the community for feedback on how the documentation could be improved and posted a few suggestions. The response from the community was tremendous. Peppered by feedback and full of inspiration I went to the drawing [...]]]></description>
+			<content:encoded><![CDATA[<p>Last fall I wrote a couple of blog posts about our visions for redesigning the Qt Reference Documentation. We asked the community for feedback on how the documentation could be improved and posted a few suggestions. The response from the community was tremendous. Peppered by feedback and full of inspiration I went to the drawing board and started my work. Right before summer the first &#8220;stable&#8221; version of the new documentation was published in the 4.7-snapshot, and now we want to get your feedback, before we continue.<br />
+ <br />
+<strong>New features</strong><br />
+The documentation published online has got some new features and a new graphical theme. However, the new design is not all graphics. The most important changes made are the new navigation and usability features. As mentioned, on the left side in the online version you will find a menu providing links to some of the most important pages in the documentation. However, this is not the main feature of the menu. It also sports an AJAX-based search box, which will &#8220;automagically&#8221; adapt the links populating the menus to match your search. This works much like the index search in Qt Assistant and other traditional help applications.<br />
+ <br />
+Basically, it works like this: When you type in, let&#8217;s say &#8220;QDockWidget&#8221;, the content of the API Lookup menu will provide links to the class reference documentation for QDockWidget. The API topic menu will provide links to articles relevant to QDockWidget, and the API Examples menu should provide relevant examples.</p>
+<p><a href='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/img1.png' title='Search feature'><img src='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/img1.png' alt='Search feature' /></a> <br />
+ <br />
+We also wanted to improve the usability of the documentation content. At the top of the main page section in the online documentation you will find a toolbar sporting tools like text resizing and printing. This is also where you will find the bread crumb bar providing shortcuts for navigation. Currently, the moment the bread crumb reflects only the hierarchy of the pages and not the browsing history. We will evaluate how this works based on the feedback you provide us.<br />
+ <br />
+<a href='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/img2.png' title='Tools feature'><img src='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/img2.png' alt='Tools feature' /></a><br />
+ <br />
+We have also worked on on-page navigation. You will find that we have replaced the &#8220;next/previous page&#8221; navigation with a table of contents that lets you navigate directly from the top, down to the content you want to read. This will save you clicks, hopefully reflect the relationship between the page sections, as well as making it easier to print and handle the content.<br />
+ <br />
+<a href='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/img3.png' title='Table of content feature'><img src='http://labs.trolltech.com/blogs/wp-content/uploads/2010/08/img3.png' alt='Table of content feature' /></a></p>
+<p><strong>Structure</strong> <br />
+One of the most important documentation pages is the index page. Being the entrance to the complete documentation it needs to reflect both the whole documentation content and stay nice and tidy at the same time. That is why one of the most important tasks we are working on these days is creating good overview pages to take you down into the greasy matter. We are keeping overview pages like &#8220;All classes&#8221; and &#8220;All functions&#8221;, however renamed, and focusing on high-level concepts to collect different technologies and techniques used with Qt in the remaining overview pages. In addition to the menu search we hope this will make the journey from question to answer quicker.<br />
+ <br />
+We also wanted to make the documentation easier to use in combination with other application windows. By resizing the window horizontally, you will find that the style will adapt to the width of the page, hiding/moving sections that takes up space you need for reading. That way you can have both your favorite editor and browser on top of your screen as you are working. </p>
+<p><strong>Feedback, please <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_smile.gif' alt=':)' class='wp-smiley' /> </strong><br />
+We have many ideas for further development of in the months and years to come. Several projects are running to make the Qt documentation a richer and more useful tool. However, we need your feedback on what we have done to make good decisions on our next steps. By clicking the feedback link at the bottom of the main section on every page in the online documentation, you will be able to leave feedback to us.<br />
+ <br />
+So, please go over to <a href="http://doc.qt.nokia.com/4.7-snapshot/index.html">http://doc.qt.nokia.com/4.7-snapshot/index.html</a> and give us your review.<br />
+<em>Note: This feedback should be limited to the documentation of the page you are browsing. Please feel free to submit suggestions and large bugs in our bug tracker system. </em></p>
+<p>Our goal is for you to spend as little time reading documentation, and more time developing good application. This is - so far - our attempt to reach that goal. However, there will be more to come.</p>
+<p>On behalf of the Qt Documentation Team<br />
+Morten E.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/08/11/documentation-dressed-up-and-ready-to-serve/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>QML/3D Demo</title>
+		<link>http://labs.trolltech.com/blogs/2010/08/10/qml3d-demo/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/08/10/qml3d-demo/#comments</comments>
+		<pubDate>Tue, 10 Aug 2010 01:14:04 +0000</pubDate>
+		<dc:creator>Danny Pope</dc:creator>
+		
+		<category><![CDATA[Graphics]]></category>
+
+		<category><![CDATA[Declarative UI]]></category>
+
+		<category><![CDATA[OpenGL]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/08/10/qml3d-demo/</guid>
+		<description><![CDATA[With the imminent release of QML in Qt 4.7 it seems like the perfect time to let you all in on what we in the weird world of graphics have been working on to support this new paradigm for Qt development.
+You may remember that way back in November &#8216;09 there was a blog post describing [...]]]></description>
+			<content:encoded><![CDATA[<p>With the imminent release of QML in Qt 4.7 it seems like the perfect time to let you all in on what we in the weird world of graphics have been working on to support this new paradigm for Qt development.</p>
+<p>You may remember that way back in November &#8216;09 there was a blog post <a href="http://labs.trolltech.com/blogs/2009/11/18/qt3d-brings-qt-style-coding-to-3d/">describing Qt/3D</a>.  Qt/3D, as you know, is a set of tools and functions which make coding of 3d graphics quicker and easier within the Qt framework. Many of the core elements (enablers, and so on) of Qt/3D have already found their way into Qt, with more fun and excitement upcoming in the near future as new functionality is introduced and more people start playing with 3d in Qt.</p>
+<p>In that same post QML/3D was very briefly mentioned as a &#8216;next logical step&#8217; for developing 3d applications in Qt.  Since that time we&#8217;ve made good on this idea and have a functioning prototype of QML/3D up and running.</p>
+<p>It&#8217;s important to note that this is far from a fully rounded application development framework. It does, however, prove that 3d content can be quickly and easily added to applications, and that with Qt3d providing the heavy lifting in the background, content rich graphical applications are within the reach of even the novice developer.</p>
+<p>So without further ado, here&#8217;s a quick peek at what it&#8217;s like to develop in QML/3D:</p>
+<object width="640" height="480">
+<param name="movie" value="http://www.youtube.com/v/OXcxFZbKUNI&amp;hl=en_GB&amp;fs=1?rel=0&amp;hd=1"></param>
+<param name="allowFullScreen" value="true"></param>
+<param name="allowscriptaccess" value="always"></param>
+<p><embed src="http://www.youtube.com/v/OXcxFZbKUNI&amp;hl=en_GB&amp;fs=1?rel=0&amp;hd=1" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="480"></embed></object>
+<ul>
+<strong>Where To Next?</strong></ul>
+<p>QML/3D still has a long way to go.  Right now it&#8217;s a great way of putting 3d &#8216;toys&#8217; into an application, and providing limited functionality, but it is by no means an all around solution to 3d applications and interfaces.</p>
+<p>In coming months we plan to more closely integrate QML/3D into the standard QML framework and provide the kind of capabilities and conveniences which will make development of productive and useful applications in QML/3D just as quick and easy as they are in QML.</p>
+<p>The most important thing, however, is for you - the community - to play with QML/3D (and Qt/3D) and tell us what you&#8217;d like to see added to and taken away from it, or what you want to be able to do with it!</p>
+<p>So in the meantime, happy coding, and stay tuned for more QML/3D news in coming months.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/08/10/qml3d-demo/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>Hitching Qt/Embedded to a framebuffer OpenGL ES (2) abstraction</title>
+		<link>http://labs.trolltech.com/blogs/2010/08/05/hitching-qtembedded-to-a-framebuffer-opengl-es-2-abstraction/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/08/05/hitching-qtembedded-to-a-framebuffer-opengl-es-2-abstraction/#comments</comments>
+		<pubDate>Wed, 04 Aug 2010 22:32:06 +0000</pubDate>
+		<dc:creator>Donald Carr</dc:creator>
+		
+		<category><![CDATA[OpenGL]]></category>
+
+		<category><![CDATA[Lighthouse]]></category>
+
+		<category><![CDATA[Embedded]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/08/05/hitching-qtembedded-to-a-framebuffer-opengl-es-2-abstraction/</guid>
+		<description><![CDATA[People (customers in my case) often find themselves in a situation where
+they have OpenGL ES 2 libraries for their hardware and want to use their
+hardware&#8217;s OpenGL capabilities in conjunction with Qt.
+If they are using Qt/X11 the complexity is drastically reduced, and all
+they basically need to do is establish what the required link lines are in
+order [...]]]></description>
+			<content:encoded><![CDATA[<p>People (customers in my case) often find themselves in a situation where<br />
+they have OpenGL ES 2 libraries for their hardware and want to use their<br />
+hardware&#8217;s OpenGL capabilities in conjunction with Qt.</p>
+<p>If they are using Qt/X11 the complexity is drastically reduced, and all<br />
+they basically need to do is establish what the required link lines are in<br />
+order to get the Qt ./config.tests/unix/(egl|opengles*) tests to pass and<br />
+add these to the appropriate variables in their targets mkspec. Qt<br />
+compiles and everything should simply work without further consideration.<br />
+Your Qt/X11 happens to be using EGL rather than GLX, but you are completely<br />
+abstracted away from this unless you chose to dig. (We will assume for<br />
+ undoubtedly nefarious purposes)</p>
+<p>The problem with using X11 is that framebuffer OpenGL ES (2) drivers for various<br />
+ platforms are often orders of magnitude more performant than their X equivalents due<br />
+ to the overhead of the X11 coupling. (This overhead is not universally apparent and<br />
+ depends on the quality of the X11 integation, quality of (vendor) system developer, length<br />
+of beard on your driver, phase of the moon and other hard to pin down quantities).</p>
+<p>X11 is also a little over endowed in circumstances when you are running a<br />
+single application on a local display, and one can&#8217;t help but feel that the<br />
+(network) abstractions it offers, regardless of how wondrous they are, should be trimmed<br />
+ away, which leads to many customers turning to/insisting on Qt/Embedded.</p>
+<p>If they are using Qt/Embedded and want OpenGL ES (2) support they are immediately<br />
+ stumped for a QScreen driver for anything other than powervr hardware.</p>
+<p>q) Why doesn&#8217;t Qt (Development Frameworks) provide a generic OpenGL ES (2)<br />
+driver which can be used against any Khronos compliant EGL libraries?</p>
+<p>a) This is due to the unfortunate absence of a formal specification for<br />
+surface management, which results in every EGL vendor cooking up their own<br />
+proprietary surface management abstractions such as WSEGL for Powervr:</p>
+<p>http://qt.gitorious.org/qt/qt/blobs/4.7/src/3rdparty/powervr/wsegl.h</p>
+<p>Since Qt/Embedded&#8217;s driver and windowing system (QWS) are tightly coupled,<br />
+porting Qt to a new vendor&#8217;s EGL abstraction is complex and requires a<br />
+serious engagement. This complexity should be drastically reduced in the<br />
+future as part of the Lighthouse project:</p>
+<p>http://labs.trolltech.com/blogs/2009/10/02/introducing-new-port-of-qt-to-your-favourite-platform/</p>
+<p>(stale but informative link, if this piques your interest please read the<br />
+subsequent lighthouse posts to come up to date with the current state of<br />
+affairs)</p>
+<p>which as one of its goals decouples QWS from the Qt/Embedded, allowing any<br />
+external entity to manage the surfaces/windows. (This assumes the vendor in<br />
+the future provides a civilized surface abstraction and associated window manager<br />
+ which takes full responsibility for managing the surfaces/windows it provides to Qt.)</p>
+<p>The hope is that people will be enabled to rapidly extend Qt to any<br />
+windowing abstraction/manager which the future throws at us, be it:</p>
+<p>QWS, Wayland, OpenKODE, SurfaceFlinger, YourOwnSurfaceManagementScreed</p>
+<p>In the meantime, if you absolutely have to use any driver in the:</p>
+<p>./src/plugins/gfxdrivers</p>
+<p>as a reference for full QWS integration on a platform, please do yourself a<br />
+favour and use the powervr driver as inspiration (we do). It is feature<br />
+complete, relatively well tested and used on shipping devices. It is also<br />
+exceedingly well documented. (I didn&#8217;t write it, so this is not me plugging<br />
+my own work) We have had (external) intrepid bright sparks in the past root<br />
+around in said directory, root up a driver which was relevant at the turn<br />
+of the 21st century and use it as a foundation for their new driver. No<br />
+point loading the dice (read gun) against yourself.</p>
+<p>q) I don&#8217;t care about windowing, all I want is a single fullscreen QGLWidget<br />
+which I want to:</p>
+<p>1) Use directly for OpenGL ES 2 content<br />
+2) Use as a viewport to a QGraphicsView</p>
+<p>a) Well, good news:</p>
+<p>http://qt.gitorious.org/qt-labs/simplegl</p>
+<p>was designed to scratch this itch. It has worked on every platform it has<br />
+been tested on, which include but are not limited to:</p>
+<p>TI Beagleboard (c3)<br />
+Broadcom BCM911107VP<br />
+Freescale i.MX51</p>
+<p>Please read the documentation:</p>
+<p>http://qt.gitorious.org/qt-labs/simplegl/blobs/77704a984b6819230d98445e0117fd24633624f0/README</p>
+<p>prior to use, as it mentions important considerations your should bear in<br />
+mind when using this driver.</p>
+<p>We are accepting merge requests, feedback and abuse in the comments<br />
+section. Let the good times roll.</p>
+<p>q) Should I use this on Beagleboard?</p>
+<p>a) No, I would strongly recommend using the powervr driver on Beagleboards, I<br />
+just included the Beagleboard as one of the validation platforms in order<br />
+to verify the driver is broadly usable.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/08/05/hitching-qtembedded-to-a-framebuffer-opengl-es-2-abstraction/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>Qt Mobility 1.1.0 Technology Preview</title>
+		<link>http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-110-technology-preview/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-110-technology-preview/#comments</comments>
+		<pubDate>Tue, 27 Jul 2010 10:09:35 +0000</pubDate>
+		<dc:creator>Gerard</dc:creator>
+		
+		<category><![CDATA[QtMobility]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-110-technology-preview/</guid>
+		<description><![CDATA[The Qt Mobility teams are working full steam to bring you new APIs and extend our Qt developer offering.
+To that end, we are very pleased to share the Technology Preview of our latest APIs.
+This set of new APIs will be matured, with your help, and released later this year as QtMobility 1.1.0.
+As you may know, [...]]]></description>
+			<content:encoded><![CDATA[<p>The Qt Mobility teams are working full steam to bring you new APIs and extend our Qt developer offering.</p>
+<p>To that end, we are very pleased to share the Technology Preview of our latest APIs.<br />
+This set of new APIs will be matured, with your help, and released later this year as QtMobility 1.1.0.</p>
+<p>As you may know, we have also worked hard to resolve issues within the QtMobility 1.0.1 release, and to that end, earlier today we released our 1.0.2 package. While the quality of 1.0 is of the highest importance, we did not want to delay in sharing our drafts here for 1.1, as we believe that sharing early and often with you helps to achieve robust, high quality APIs. </p>
+<p>Those longer term veterans understand that the Technology Preview releases are the best opportunity for you to help shape our new APIs before they solidify.</p>
+<p>Releasing a Technology Preview early on like this however has some limitations for those reviewing. Specifically, given the early stage of development we have included only minimal backend support. But it is better to release the API drafts early and give you the opportunity to review and contribute before things become too settled.</p>
+<p><strong>On the subject of Contributions:</strong><br />
+Your contribution toward desktop backends in particular is always most welcome as the program are firstly prioritising mobilie platforms; specifically Symbian and Maemo. (And later this year in Q3/Q4 we change our default development environment to Meego! <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_smile.gif' alt=':)' class='wp-smiley' /> )</p>
+<p><strong>Some detail on the logistics of how to go about reviewing this Technology Preview release:</strong><br />
+This time round we are introducing &#8216;DevNet&#8217; to the process.<br />
+DevNet facilitates better API review and communications.<br />
+Each of the new APIs will be individually introduced via Wiki on DevNet at <a href="http://developer.qt.nokia.com/">http://developer.qt.nokia.com/</a>.<br />
+There will also be a forum thread for each API, where you can share your review comments and track progress of the API as it matures toward Beta.<br />
+Good eh!? we certainly hope so <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_smile.gif' alt=':)' class='wp-smiley' /><br />
+Also, let us know how you feel about that.</p>
+<p><strong>Ok, so whats in the box this time round!?</strong><br />
+This Technology Preview contains 8 new APIs and also, in a few cases, some extensions to the existing APIs that were introduced in 1.0.<br />
+We are also introducing Qt Quick (QML) bindings for our APIs and several of those too are shared in this preview!</p>
+<p><em>The list is as follows:</em></p>
+<li><a href="http://developer.qt.nokia.com/wiki/ServiceFrameworkAPI">Service Framework API (Out-of process)</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/DocumentGalleryAPI">Document Gallery API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/MapsNavigationAPI">Maps/Navigation API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/OrganizerAPI">Organizer API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/LandmarksAPI">Landmarks API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/CameraAPI">Camera API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/VersitAPI">Versit/Organizer API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/TelephonyEventsAPI">Telephony Events API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/FeedbackAPI">Feedback API</a></li>
+<li><a href="http://developer.qt.nokia.com/wiki/ContactsAPI">Contacts API</a></li>
+<p><strong>You can download the source package from:</strong><br />
+<a href="ftp://ftp.qt.nokia.com/qt/solutions/qt-mobility-opensource-src-1.1.0-tp.tar.gz">ftp://ftp.qt.nokia.com/qt/solutions/qt-mobility-opensource-src-1.1.0-tp.tar.gz</a><br />
+<a href="ftp://ftp.qt.nokia.com/qt/solutions/qt-mobility-opensource-src-1.1.0-tp.zip">ftp://ftp.qt.nokia.com/qt/solutions/qt-mobility-opensource-src-1.1.0-tp.zip</a></p>
+<p>Some APIs have been worked on a little more than others but overall, we believe they are in good shape for you to commence your review. Backend implementation wise, most of the APIs have the Maemo 5 backend which is currently our primary development environment.<br />
+For each API there is an example application that demonstrates usage.<br />
+Please note that Symbian SIS packages are not provided within this technology preview release as the backend is still under heavy development.</p>
+<p>We hope you enjoy this early preview of the ongoing work and as always,<br />
+please continue to contribute, as your feedback is very valuable in helping us get it right!</p>
+<p>Thank you,</p>
+<p>Gerard and Min.<br />
+On behalf of the Qt Mobility Program team</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-110-technology-preview/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>Qt Mobility 1.0.2 Released</title>
+		<link>http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-102-released/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-102-released/#comments</comments>
+		<pubDate>Tue, 27 Jul 2010 09:43:30 +0000</pubDate>
+		<dc:creator>Gerard</dc:creator>
+		
+		<category><![CDATA[QtMobility]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-102-released/</guid>
+		<description><![CDATA[Its here!
+For those in Europe enjoying a well deserved vacation by the side of a pool, or indeed for the rest of us around the world working hard on our projects, the availability of this package should come as very good news.
+The team, have worked very hard to ensure that our 1.0.2 package addresses those [...]]]></description>
+			<content:encoded><![CDATA[<p><strong>Its here!</strong><br />
+For those in Europe enjoying a well deserved vacation by the side of a pool, or indeed for the rest of us around the world working hard on our projects, the availability of this package should come as very good news.</p>
+<p>The team, have worked very hard to ensure that our 1.0.2 package addresses those critical fixes (P0, P1 errors) that we communicated about on our recent alert <a href="http://labs.trolltech.com/blogs/2010/07/01/mobility-api-mandatory-update-for-symbian-apps-created-using-beta-nokia-qt-sdk/">post</a>.</p>
+<p>In short, the more prominent APIs issues were: Location API crashes on Symbian platforms and Sensors API failing on Maemo 5.</p>
+<p>So we are very happy/relieved to be able to say that the promised 1.0.2 package has now arrived and can be downloaded from our <a href="http://qt.nokia.com/products/appdev/add-on-products/catalog/4/new-qt-apis/mobility">Qt Solutions </a>webpage.</p>
+<p>Also, coming very soon&#8230;your chance to download the technology preview release and be the first to try the next set of new APIs!! Not long to wait now at all <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_smile.gif' alt=':)' class='wp-smiley' /> </p>
+<p>We hope you enjoy!</p>
+<p>Kind regards,<br />
+Gerard &#038; Min.</p>
+<p>On behalf of the Qt Mobility Team.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/07/27/qt-mobility-102-released/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>Qt 4.7.0 String Freeze</title>
+		<link>http://labs.trolltech.com/blogs/2010/07/22/qt-470-string-freeze/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/07/22/qt-470-string-freeze/#comments</comments>
+		<pubDate>Thu, 22 Jul 2010 06:08:16 +0000</pubDate>
+		<dc:creator>Toby Tomkins</dc:creator>
+		
+		<category><![CDATA[Qt]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/07/22/qt-470-string-freeze/</guid>
+		<description><![CDATA[Qt 4.7.0 string freeze is now in effect. No changes to strings will be accepted from this point.
+Qt aims at being fully internationalized by use of its own i18n framework. Localization to languages we have no internal resources for needs to be provided by the community. If you would like to contribute your own translation [...]]]></description>
+			<content:encoded><![CDATA[<p>Qt 4.7.0 string freeze is now in effect. No changes to strings will be accepted from this point.</p>
+<p>Qt aims at being fully internationalized by use of its own i18n framework. Localization to languages we have no internal resources for needs to be provided by the community. If you would like to contribute your own translation please look at the <a href="http://qt.gitorious.org/qt/pages/QtLocalization">Qt Localization</a> guide.</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/07/22/qt-470-string-freeze/feed/</wfw:commentRss>
+		</item>
+		<item>
+		<title>Designing code for QML UIs</title>
+		<link>http://labs.trolltech.com/blogs/2010/07/20/designing-code-for-qml-uis/</link>
+		<comments>http://labs.trolltech.com/blogs/2010/07/20/designing-code-for-qml-uis/#comments</comments>
+		<pubDate>Tue, 20 Jul 2010 02:57:44 +0000</pubDate>
+		<dc:creator>Alan Alpert</dc:creator>
+		
+		<category><![CDATA[Qt]]></category>
+
+		<category><![CDATA[Declarative UI]]></category>
+
+		<guid isPermaLink="false">http://labs.trolltech.com/blogs/2010/07/20/designing-code-for-qml-uis/</guid>
+		<description><![CDATA[QML is starting to approach its initial release. Those who have been using QML for a while can rejoice, for this means that we&#8217;re no longer changing everything and the stability of having an actual release can now be seen on the horizon (although maybe I&#8217;m just bitter because I had to change Samegame again [...]]]></description>
+			<content:encoded><![CDATA[<p>QML is starting to approach its initial release. Those who have been using QML for a while can rejoice, for this means that we&#8217;re no longer changing everything and the stability of having an actual release can now be seen on the horizon (although maybe I&#8217;m just bitter because I had to change Samegame again today, because the QML behavior underneath has changed in what should be the last destabilizing change of this release). To celebrate, I&#8217;m going to do some blog posts on QML; just some various brain dumps on how to get the most out of QML. I think this is useful, largely because I think that QML is so amazingly powerful when you do get the most out of it. For now, getting the most out of QML is sadly limited to just awesome, fluid UIs. It&#8217;s still worth it. Since the <a href="http://doc.qt.nokia.com/4.7-snapshot/declarativeui.html">docs</a> explain how to get started and animating your UIs with QML, I&#8217;m going to start from the other side here. Presumably a lot of labs readers are C++ developers, and are wondering how they can get the most out of QML even though they write C++. In this case you can get a lot out of QML from using it as the UI layer on top of your C++ application logic. So here are the &#8216;recommended best practices&#8217; to think about, so that you can make your next application QML-compatible from the start. Since this is basically just separation of the UI layer and the application logic layer, these practices are probably a good idea anyways. (Note that this is NOT the model-view-controller pattern, even though there is some overlap.)</p>
+<p>Separating the UI from the application logic, QML style, starts at design time. Think about what it is that your application really does. Naturally you&#8217;ll want to have a fluid, aethetically pleasing yet eminently usable user interface for it, but that part comes later. Your application may interface with a custom database, or it may play a game, or it may perform complex calculations over and over. For simple things, like just accessing web content or adding two numbers, you can make do with what comes with QML, such as the integrate QtScript or XmlListModel. For everything else, there&#8217;s Qt C++. If your application is, for example, interfacing with a custom database then you&#8217;ll likely be implementing that interface in C++ still. Because the layers are separate  you should implement, on its own, the C++ parts that drive the application logic.</p>
+<p>When writing the C++ layer, you want to end up with a QObject derived class which exposes all the relevant application data through properties, signals and slots. For a database example, you would have properties that get set to provide the connection details, then you would have signals when the connection state progresses, and then you would have some way of getting the data. Depending on the data, this could be slots that return a value, properties that include whole models for viewing in the UI, or a mixture with slots that might update the data in the models exposed through properties. This is similar to existing Qt APIs for data objects. If you look at QAction, you will see that it provides a variety of properties for setting details about the action as well as a signal when the action is triggered. Looking at <a href="http://doc.qt.nokia.com/4.7-snapshot/qaction.html">QAction</a> as an example, it also has slots for manipulating properties. While this is not necessary for QML, it is perfectly acceptable for use from C++. Another example would be the folderlistmodel plugin in src/imports/folderlistmodel, A final real-world example would be the <a href="http://doc.qt.nokia.com/qtmobility-1.0-tp/qsystemdeviceinfo.html">system info API</a> in Qt Mobility which you could expose to QML and then just pick up and use due to the property based interface.</p>
+<p>For the most part it really is as simple as just using properties, signals and slots. The only QML specific advice I&#8217;d give is to think more declaratively. The techincal requirements for QML integration are easy to meet, but for something that&#8217;s really easy to use with QML it helps to consider the declarative approach when designing the interface. This is not incompatible with a good C++ interface. The main difference is with the use of properties. From C++, properties are little more than a convenience for the documentation. But from QML, properties are the primary method of interaction. It will be more useful from QML to have a boolean property isOn than to have turnOn and turnOff slots in C++. It will also be a lot easier than having a toggleOnOffState() slot and a getOnOffState() slot. Because properties are the main method of interaction for QML, it&#8217;s also better to have properties rather than just slots when passing data in or out of the C++ class - even when the communication is strictly one way. This is because the declarative approach thinks in terms of properties (The state is on. I want the state off.) rather than imperative steps (The state is on when getState()==true. If getState()==true, setState(false).). Other minor details from thinking declaratively are to always remember to have a notify signal for properties, and to allow the properties to be set in any order instead of having strict initialization order requirements. It&#8217;s a subtle distinction though, and in the end though you&#8217;ll just have a C++ class with a black box implementation and an interface comprised of properties, signals and slots. Such a class can then be used by a variety of things to construct a full application by adding a UI. From this class, you can add a C++ QWidget UI, a QML UI or something else (perhaps a pyside UI) on top to create a full application.</p>
+<p>As this is a best practices approach, it includes a test plan. You&#8217;ll want to test this with automated unit tests before even writing your first UI. Because you want a C++ part completely separate from the UI, it needs to be tested separately to any of your UI front ends. This can seem like a lot of overhead, but the actual data part is usually quite small compared to the UI. If it isn&#8217;t then it&#8217;s probably something really hairy and you need the extra testing anyways <img src='http://labs.trolltech.com/blogs/wp-includes/images/smilies/icon_wink.gif' alt=';)' class='wp-smiley' /> .</p>
+<p>The advantage of having a completely separate UI and data layer is that you can alter or add new UIs at a moments notice. Imagine &#8216;themes&#8217; that can change the entire look and feel, not just a few colors and pixmaps. Even better, imagine the ease in which you can port your application to a completely different platform. I think Qt&#8217;s cross-platform widgets do a fine job on some of the desktop platforms, although that is debatable. Less debatable is how well they do when porting your app from a desktop platform to a 240&#215;320 keypad phone and a 800&#215;480 touchscreen phone. With such radical changes in the form factor and basic I/O devices, there is no alternative to a complete UI rewrite if you want to have an excellent UI. But if you have the UI and data layer completely separated, you can easily rewrite the entire UI in QML, and get the same functionality behind it with a simple recompile. So while &#8216;write once, deploy everywhere&#8217; is an impossible dream with the UI across phones (and similar devices) you don&#8217;t have to give up hope on the application logic, which was the harder one to write anyways.</p>
+<p>A second advantage is that the separate UI and data layer allows them to be developed individually. While a developer is writing and testing the data logic, a designer can prototype and write the UI with dummy data. Then the unification of the two to make a real application becomes really simple. Or, for free software projects, if the developer has a great idea but wrote a lousy interface for it, then a designer has a much lower barrier towards contributing to make it more usable. He could just write a UI in QML and, at least in cases where the C++ logic was deployed via the QML plugin system, actually create and use it without needing to compile or even read the &#8216;intimidating&#8217; C++ code.</p>
+<p>It might be Qt specific, but my advice for future designs is to expose the application logic in a QObject derived class, using properties, signals and slots for the interface. You can then expose it through a QML or C++ plugin, use it with a QML or C++ UI, or even run unit tests on it directly. This design helps with modularity where it counts, in the data layer, and allows UI swapping at will (or even at runtime, if you&#8217;re so inclined).</p>
+]]></content:encoded>
+			<wfw:commentRss>http://labs.trolltech.com/blogs/2010/07/20/designing-code-for-qml-uis/feed/</wfw:commentRss>
+		</item>
+	</channel>
+</rss>

@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/180/trunk/rsssuite/rssmanager
+END
+source.xml
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/68/trunk/rsssuite/rssmanager/source.xml
+END
+searchkeys.xml
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/68/trunk/rsssuite/rssmanager/searchkeys.xml
+END
+rssmanager.pro
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/137/trunk/rsssuite/rssmanager/rssmanager.pro
+END
+rssmanager.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/192/trunk/rsssuite/rssmanager/rssmanager.cpp
+END
+main.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/68/trunk/rsssuite/rssmanager/main.cpp
+END
+feedprofile.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/192/trunk/rsssuite/rssmanager/feedprofile.cpp
+END
+rssmanager.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/192/trunk/rsssuite/rssmanager/rssmanager.h
+END
+RSSModel.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/196/trunk/rsssuite/rssmanager/RSSModel.cpp
+END
+feedprofile.h
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/192/trunk/rsssuite/rssmanager/feedprofile.h
+END
+rssmanager.pri
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/134/trunk/rsssuite/rssmanager/rssmanager.pri
+END
+rssmanager.pro.user
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/180/trunk/rsssuite/rssmanager/rssmanager.pro.user
+END
+RSSModel.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/196/trunk/rsssuite/rssmanager/RSSModel.h
+END

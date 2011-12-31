@@ -1,0 +1,1 @@
+include(rssmanager/rssmanager.pri)

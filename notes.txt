@@ -1,0 +1,18 @@
+feedmanager api
+
+// This will fetch elements mentioned in intrestedElements among the updatedElements 
+// returns list of updatedElements with a stringlist of strings for intrestedelements
+QList<QStringList> getItems(QList<RSSElement> intrestedElements);
+
+client fills as
+mIntrestedItemElements<<RSSParser::title<<RSSParser::link<<RSSParser::description<<RSSParser::author;
+
+// overcome all namespaces
+for $x in doc("http://labs.trolltech.com/blogs/feed/")//channel
+return data($x/item[1]/*:creator)
+ 
+// return all namespaces used in xml 
+  (:in-scope-prefixes($x):)
+  
+  http://webcache.googleusercontent.com/search?q=cache:g5jX-1pUuqcJ:www.xmlplease.com/xquery-xhtml+http://www.xmlplease.com/xquery-xhtml%23s4.4&cd=1&hl=en&ct=clnk&gl=in&client=firefox-a
+  

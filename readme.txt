@@ -1,0 +1,1 @@
+A Qt based RSS manager. This includes an rss parser, a rss manager to manage all the feeds to update on regular intervals. Need to add media-rss support.
