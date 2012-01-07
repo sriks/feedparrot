@@ -7,68 +7,45 @@
 #include "rssparser.h"
 
 
-/**
-  Class to hold a RSS Subscrition info
-  **/
-class FeedSubscription
-{
-public:
-    explicit FeedSubscription(QUrl sourceUrl,int updateIntervalInMins = 60)
-    {
-        mSourceUrl = sourceUrl;
-        mUpdateInterval = updateIntervalInMins;
-    }
-
-    QUrl sourceUrl(){return mSourceUrl;}
-    void setSourceUrl(QUrl source){mSourceUrl = source;}
-    int updateInterval(){return mUpdateInterval;}
-    void setUpdateInterval(int updateIntervalInMins){mUpdateInterval = updateIntervalInMins;}
-
-    bool isValid()
-    {
-        // Feed with negative interval is valid
-        return !mSourceUrl.toString().isEmpty();
-    }
-private:
-    QUrl mSourceUrl;
-    int mUpdateInterval;
-};
-
 // Forward declaration
 class FeedProfile;
+class RSSManagerPrivate;
 class RSSManager : public QObject
 {
     Q_OBJECT
 public:
     explicit RSSManager(QObject *parent = 0);
     ~RSSManager();
-    void addFeed(FeedSubscription newSubscription);
-    bool setUpdateInterval(QUrl sourceUrl, int newUpdateIntervalInMins);
-    RSSParser* parser(QUrl sourceUrl);
-    bool isFeedValid(QUrl sourceUrl);
-    bool start(QUrl sourceUrl);
+
+public slots:
+    bool add(QUrl url,int msec = 60*1000);
+    bool remove(QUrl url);
+    void removeAll();
+
+    bool start(QUrl url);
     void startAll();
-    bool stop(QUrl sourceUrl);
+
+    void stop(QUrl url);
     void stopAll();
-    bool removeFeed(QUrl sourceUrl);
-    FeedSubscription feed(QUrl sourceUrl);
-    QList<FeedSubscription> feeds();
-    QList<QUrl> feedUrls();
-    QString feedFileName(QUrl sourceUrl);
-    int feedsCount() const {return mFeedProfiles.count();}
-    FeedProfile* feedProfile(int index);
-    QHash<QString,FeedProfile*> feedProfiles() const;
+
+    int count() const;
+    bool contains(QUrl url) const;
+    QList<QUrl> urls() const;
+    QString feedFileName(QUrl url);
+    RSSParser* parser(QUrl url);
+
+    void setInterval(QUrl url, int msec);
     void updateAll();
-    void update(QUrl sourceUrl);
+    void update(QUrl url);
 
 signals:
     /*!
       \brief Signal is emitted when new feed content is available
-      \arg sourceUrl Subscription URL on which new feed content is available.
+      \arg url Subscription URL on which new feed content is available.
       \arg updateditems Number of feed items that are updated.
       */
-    void updateAvailable(QUrl sourceUrl, int updateditems);
-    void error(QString errorDescription,QUrl sourceUrl);
+    void updateAvailable(QUrl url, int updateditems);
+    void error(QString errorDescription,QUrl url);
 
 private slots:
     // Internal methods, experimental support
@@ -76,6 +53,6 @@ private slots:
     bool internalize();
 
 private:
-    QHash<QString,FeedProfile*> mFeedProfiles;
+    RSSManagerPrivate* d;
 };
 #endif // RSSMANAGER_H

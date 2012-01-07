@@ -5,16 +5,17 @@
 #include "rssmanager.h"
 #include "feedprofile.h"
 
-// Internal class to externalize and internalize feed subscription preferences
-class FeedStorage
-{
+class RSSManagerPrivate {
 public:
-    FeedSubscription mFeedSubscription;
-    QString mLatestItemTitle;
+    QMap<QUrl,FeedProfile*> profiles;
+    FeedProfile* profile(QUrl url) const {
+        return profiles.value(url,NULL);
+    }
 };
+
 const QString KFeedStorageFileName("feedstore.xml");
 const QString KFeedStorageFeedElement("feed");
-const QString KFeedStorageSourceUrl("sourceurl");
+const QString KFeedStorageurl("url");
 const QString KFeedStorageUpdatePeriod("updateperiod");
 const QString KFeedStorageLatestItemTitle("latestitemtitle");
 
@@ -24,8 +25,8 @@ const QString KFeedGroup("feeds");
 const QString KFeedList("feedlist");
 
 RSSManager::RSSManager(QObject *parent) :
-    QObject(parent)
-{
+    QObject(parent) {
+    d = new RSSManagerPrivate;
     // read all preferences
     //internalize();
 }
@@ -33,10 +34,10 @@ RSSManager::RSSManager(QObject *parent) :
 RSSManager::~RSSManager() {
     // write all preferences
     externalize();
+    delete d;
 }
 
-bool RSSManager::externalize()
-{
+bool RSSManager::externalize() {
     // Write all subscriptions to persistent storage as XML
     QFile storageFile(KFeedStorageFileName, this);
     if(storageFile.open(QIODevice::WriteOnly))
@@ -44,14 +45,14 @@ bool RSSManager::externalize()
     QXmlStreamWriter xmlWriter(&storageFile);
     xmlWriter.setAutoFormatting(true);
     xmlWriter.writeStartDocument();
-    QList<FeedProfile*>  profiles = mFeedProfiles.values();
+    QList<FeedProfile*>  profiles = d->profiles.values();
         for(int i=0;i<profiles.count();i++)
         {
             xmlWriter.writeStartElement(KFeedStorageFeedElement);
-            xmlWriter.writeTextElement(KFeedStorageSourceUrl,
-                                       profiles.at(i)->subscription().sourceUrl().toString());
+            xmlWriter.writeTextElement(KFeedStorageurl,
+                                       profiles.at(i)->url().toString());
             xmlWriter.writeTextElement(KFeedStorageUpdatePeriod,
-                                       QString().setNum(profiles.at(i)->subscription().updateInterval()));
+                                       QString().setNum(profiles.at(i)->interval()));
             xmlWriter.writeTextElement(KFeedStorageLatestItemTitle,
                                        profiles.at(i)->lastestItemTitle());
             xmlWriter.writeEndElement();
@@ -62,97 +63,77 @@ bool RSSManager::externalize()
     }
 
     // file not opened
-    else
-    {
+    else {
         return false;
     }
 }
 
-bool RSSManager::internalize()
-{
+bool RSSManager::internalize() {
     return true;
 }
 
 /*!
-\brief Adds a feed. If the feed already exist, it replaces existing feed.
-Note: This will not initiate update cycle. Client should call start() to initiate updates.
-\sa start() \sa startAll()
-*/
-void RSSManager::addFeed(FeedSubscription newSubscription)
-{
-    FeedProfile* profile = new FeedProfile(newSubscription,this);
-    connect(profile,SIGNAL(updateAvailable(QUrl,int)),this,SIGNAL(updateAvailable(QUrl,int)));
-    connect(profile,SIGNAL(error(QString,QUrl)),this,SIGNAL(error(QString,QUrl)));
-    mFeedProfiles.insert(newSubscription.sourceUrl().toString(),profile);
+  Adds new feed \a url to manager with interval \a msec. If does nothing if \a url is already added.
+  \return returns true if added successfully.
+  \note Since adding suplicate \a url is a NOOP, it will not restart the timer. To restart timer please
+        use setInterval(QUrl,int)
+  \sa remove(QUrl), removeAll()
+  **/
+bool RSSManager::add(QUrl url, int msec) {
+    bool res = false;
+    if(!contains(url) && !url.isEmpty()) {
+        FeedProfile* profile = new FeedProfile(url,msec,this);
+        connect(profile,SIGNAL(updateAvailable(QUrl,int)),this,SIGNAL(updateAvailable(QUrl,int)),Qt::UniqueConnection);
+        connect(profile,SIGNAL(error(QString,QUrl)),this,SIGNAL(error(QString,QUrl)),Qt::UniqueConnection);
+        d->profiles.insert(url,profile);
+        res = true;
+    }
+    return res;
 }
 
 /*!
-\brief Sets new update interval to the specified feed.
-       This will not initiate a fetch. Client should call update() to initiate a fetch on demand.
-\arg sourceUrl URL on which subscription interval should be changed.
-\arg newUpdateIntervalInMins new update interval in minutes.
-     If a negative value is supplied, subscription is stopped.
-\return returns false if supplied sourceUrl is invalid or not added yet.
+\brief Sets new update interval to \a msec to the feed identified by \a url.
+       This restarts the feed with new interval \a msec.
+       If a negative value is supplied, subscription is stopped.
+       But prefer to use stop() which is more explicit.
+\return returns false if supplied url is invalid or not added yet.
 \sa update()
 */
-bool RSSManager::setUpdateInterval(QUrl sourceUrl, int newUpdateIntervalInMins) {
-    if(isFeedValid(sourceUrl))
-    {
-        mFeedProfiles[sourceUrl.toString()]->updateTimer(newUpdateIntervalInMins);
-        return true;
-    }
-    qWarning()<<"Invalid feed "<<sourceUrl;
-return false;
+void RSSManager::setInterval(QUrl url, int msec) {
+    FeedProfile* f = d->profile(url);
+    if(f)
+        f->updateTimer(msec);
+    else
+        qWarning()<<Q_FUNC_INFO<<" url not added "<<url;
 }
 
 /*!
 \brief Removes feed permanently. Stops update cycle of this feed
        If feed is fetched and being processed, updateAvailable signal is emitted.
-\arg sourceUrl Feed to be removed
+\arg url Feed to be removed
 \return true if sucessfully removed
-        false if sourceUrl is not yet added to RSSManager.
+        false if url is not yet added to RSSManager.
 */
-bool RSSManager::removeFeed(QUrl sourceUrl)
+bool RSSManager::remove(QUrl url)
 {
-    if(isFeedValid(sourceUrl))
-    {
-    mFeedProfiles[sourceUrl.toString()]->deleteLater();
-    mFeedProfiles.remove(sourceUrl.toString());
-    return true;
+    bool result = false;
+    if(contains(url)) {
+        d->profiles.value(url)->stop();
+        d->profiles.take(url)->deleteLater();
     }
-// return that no such feed exists
-return false;
+return result;
 }
 
-/*!
-\brief Returns the feed identified by \p sourceUrl
-       If no url mentioned in \p sourceUrl exists, it returns an invalid FeedSubscription.
-       Hence client should check as FeedSubscription::isValid() before using it.
-\arg sourceUrl Feed Url identifying the feed.
-\return valid FeedSubscription if \p sourceUrl is valid
-\sa FeedSubscription::isValid()
-*/
-FeedSubscription RSSManager::feed(QUrl sourceUrl)
-{
-    FeedProfile defaultProfile(FeedSubscription(QUrl(),-1));
-    FeedProfile* profile = mFeedProfiles.value(sourceUrl.toString(),&defaultProfile);
-    return profile->subscription();
+void RSSManager::removeAll() {
+    if(!d->profiles.isEmpty()) {
+        QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+        while(iter.hasNext())
+            remove(iter.next().key());
+    }
 }
 
-/*!
-\brief Returns all feeds added so far as a QList<FeedSubscription>
-\sa feed()
-*/
-QList<FeedSubscription> RSSManager::feeds()
-{
-    QList<FeedSubscription> subscriptionList;
-    QList<FeedProfile*>  profiles = mFeedProfiles.values();
-    for(int i=0;i<profiles.count();i++)
-    {
-        subscriptionList.append(profiles.at(i)->subscription());
-    }
-
-    return subscriptionList;
+bool RSSManager::contains(QUrl url) const {
+    return d->profiles.contains(url);
 }
 
 /*!
@@ -160,159 +141,117 @@ QList<FeedSubscription> RSSManager::feeds()
 \sa feed()
 \sa feeds()
 */
-QList<QUrl> RSSManager::feedUrls()
-{
-    QList<QUrl> urlList;
-    QList<FeedProfile*>  profiles = mFeedProfiles.values();
-    for(int i=0;i<profiles.count();i++)
-    {
-    urlList.append(profiles[i]->subscription().sourceUrl());
-    }
-return urlList;
+QList<QUrl> RSSManager::urls() const {
+    return d->profiles.keys();
 }
 
-QString RSSManager::feedFileName(QUrl sourceUrl)
-{
-    FeedProfile defaultProfile(FeedSubscription(QUrl(),-1));
-    FeedProfile* profile = mFeedProfiles.value(sourceUrl.toString(),&defaultProfile);
-    return profile->feedFileName();
+QString RSSManager::feedFileName(QUrl url) {
+    QString name;
+    if(d->profiles.contains(url))
+        name = d->profiles.value(url)->feedFileName();
+    return name;
 }
 
-FeedProfile* RSSManager::feedProfile(int index) {
-    if(feedsCount() > index)
-        return feedProfiles().value(feedUrls().at(index).toString());
-    qWarning()<<__PRETTY_FUNCTION__<<" returning NULL for invalid index "<<index;
-    return NULL;
-}
-
-QHash<QString,FeedProfile*> RSSManager::feedProfiles() const {
-    return mFeedProfiles;
+int RSSManager::count() const {
+    return d->profiles.size();
 }
 
 /*!
 \brief Updates all feeds which are added so far.
-       Order of update is undefined. If such an order is required prefer to use update()
-\sa update()
+       Order of update is undefined. If such an order is required prefer to use update(QUrl)
+\sa update(QUrl)
 */
-void RSSManager::updateAll()
-{
-    QList<QString> keys = mFeedProfiles.uniqueKeys();
-    for(int i=0;i<keys.count();i++)
-    {
-        update(QUrl(keys[i]));
-    }
-}
-
-void RSSManager::update(QUrl sourceUrl)
-{
-    QString key = sourceUrl.toString();
-    if(mFeedProfiles.contains(key))
-    {
-        mFeedProfiles[key]->update();
-    }
+void RSSManager::updateAll() {
+    QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+    while(iter.hasNext())
+        update(iter.next().key());
 }
 
 /*!
-\brief Provides a parser initialized and ready to parse results from sourceurl.
+  Updates the feed on demand irresptive of interval. Interval is not restarted.
+  Hence a feed with negative interval is also updated.
+  Use this method for an on demand update.
+  \sa updateAll(), start(QUrl), startAll()
+  **/
+void RSSManager::update(QUrl url) {
+    FeedProfile* p = d->profile(url);
+    if(p)
+        p->update();
+}
+
+/*!
+\brief Provides a parser initialized and ready to parse results from url.
 \attention Ownership is transfered to the client. Client should call deleteLater() when finished with parsing.
-\arg sourceUrl URL for which the results should be parsed.
-\return returns initialized ready to use RSSParser. Returns 0 for inivaid sourceUrl.
+\arg url URL for which the results should be parsed.
+\return returns initialized ready to use RSSParser. Returns 0 for inivaid url.
 */
-RSSParser* RSSManager::parser(QUrl sourceUrl)
-{
-    FeedProfile defaultProfile(FeedSubscription(QUrl(),-1));
-    RSSParser* parser =  mFeedProfiles.value(sourceUrl.toString(),&defaultProfile)->parser();
+RSSParser* RSSManager::parser(QUrl url) {
+    RSSParser* parser = NULL;
+    FeedProfile* p = d->profile(url);
+    if(p) {
+        parser = new RSSParser(this);
+        QFile* src = new QFile(p->feedFileName());
+        src->open(QIODevice::ReadOnly);
+        parser->setSource(src);
+    }
     return parser;
 }
+
 /*!
-\brief Stop update.
-       Calling start() will start updates again.
-\arg sourceUrl URL on which update cycle should be stopped.
-\return true if a valid sourceUrl.
-\attention This has no effect if a feed is already fetched and being processed.
-           Hence a return value of true should not be considered as "fetching stopped".
+\brief Stops update for feed identified by \a url.
+\returns true if successfull.
+\note This has no effect if a feed is already fetched and being processed.
+      Hence a return value of true should not be considered as "fetching stopped".
 \sa stopAll() start() startAll() update() updateAll()
 */
-bool RSSManager::stop(QUrl sourceUrl)
-{
-    return setUpdateInterval(sourceUrl,-1);
+void RSSManager::stop(QUrl url) {
+    if(contains(url))
+        d->profile(url)->stop();
 }
 
 /*!
-\brief Convinience method to stop update cycle on all feeds
-\arg sourceUrl URL on which update cycle should be stopped.
-\attention This has no effect if a feed is already fetched and being processed.
-\sa stop()
+\brief Stops all feed updates.
+\note This has no effect if a feed is already fetched and being processed.
+\sa stop(QUrl)
 */
-void RSSManager::stopAll()
-{
-    QList<QString> keys = mFeedProfiles.uniqueKeys();
-    for(int i=0;i<keys.count();i++)
-    {
-        stop(QUrl(keys[i]));
+void RSSManager::stopAll() {
+    if(!d->profiles.isEmpty()) {
+        QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+        while(iter.hasNext()) {
+            FeedProfile* f = iter.next().value();
+            f->stop();
+        }
     }
 }
 
 /*!
 \brief Starts update. Clients should call this method to start update cycle.
        Once called update cycle is started and feeds are fetched as per update interval.
-       This has no effect if called on a feed which is already started.
-\arg sourceUrl URL on which update cycle should start.
+       This has no effect if called on a feed which is already started or the interval is negative.
+\arg url URL on which update cycle should start.
 \return true, if successfully started or called on a feed which is started.
-        false, if an invalid sourceUrl is supplied.
+        false, if an invalid url is supplied.
 \sa startAll()
 */
-bool RSSManager::start(QUrl sourceUrl)
-{
-    // TODO: Feed validation is done two times. Optimize it.
-    if(isFeedValid(sourceUrl))
-    {
-    // ignore if it is already active
-    if(!mFeedProfiles[sourceUrl.toString()]->isActive())
-        {
-        bool stat = setUpdateInterval(sourceUrl,
-                                   mFeedProfiles[sourceUrl.toString()]->subscription().updateInterval());
-        if(stat)
-        {
-        update(sourceUrl.toString());
-        }
-        return stat;
-        }
-    qWarning()<<"Starting an active feed "<< sourceUrl;
-    return true;
+bool RSSManager::start(QUrl url) {
+    bool res = false;
+    if(contains(url)) {
+        d->profile(url)->start();
+        res = true;
     }
-
-    return false;
+    return res;
 }
 
 /*!
-\brief Convience method to start all feeds
-\sa start()
+\brief Convience method to start all feeds.
+\sa start(QUrl)
 */
-void RSSManager::startAll()
-{
-    QList<QString> keys = mFeedProfiles.uniqueKeys();
-    for(int i=0;i<keys.count();i++)
-    {
-        start(QUrl(keys[i]));
+void RSSManager::startAll() {
+    if(!d->profiles.isEmpty()) {
+        QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+        while(iter.hasNext())
+            start(iter.next().key());
     }
-}
-
-/*!
-\brief returns true if a feed is valid.
-       A feed is invalid if the supplied sourceUrl is not added to RSSManager
-
-\sa addSubscription();
-*/
-bool RSSManager::isFeedValid(QUrl sourceUrl)
-{
-    if(mFeedProfiles.contains(sourceUrl.toString()))
-    {
-        return mFeedProfiles[sourceUrl.toString()]->isValid();
-    }
-
-    qWarning()<<__FUNCTION__<<" invalid feed "<<sourceUrl;
-    return false;
 }
 
 // end of file

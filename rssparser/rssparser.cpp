@@ -157,6 +157,10 @@ void RSSParser::setSource(QIODevice* xmlSource)
       m_xmlQuery.bindVariable(KXmlSource,xmlSource);
 }
 
+QIODevice *RSSParser::source() const {
+    return m_xmlSource;
+}
+
 /*! \brief Experimental API to set a filename as source. */
 bool RSSParser::setSourceFileName(QString sourceFileName)
 {
@@ -263,14 +267,11 @@ return QStringList();
     \return returns empty list in case of error.
     \sa isError(), category()
 */
-QList<QStringList> RSSParser::categories()
-{
+QList<QStringList> RSSParser::categories() {
     QList<QStringList> list;
     int itemcount = count();
     for(int i=1;i<=itemcount;i++) // XQuery indexing starts with 1
-    {
         list<<category(i);
-    }
     return list;
 }
 
@@ -279,8 +280,7 @@ QList<QStringList> RSSParser::categories()
     \return count of items
     \sa isError()
 */
-int RSSParser::count()
-{
+int RSSParser::count() {
     return executeQuery(KXqItemCount).toInt();
 }
 
@@ -314,21 +314,13 @@ QString RSSParser::executeQuery(const QString& aQuery)
 // Executes a xquery that returns as a sequence of sting list
 QStringList RSSParser::executeQueryAsList(const QString& aQuery)
 {
-    m_IsError = false;
+    m_IsError = true;
     m_xmlQuery.setQuery(aQuery);
     QStringList result;
-    result.clear();
-
-    if(m_xmlQuery.isValid())
-    {
-       m_xmlQuery.evaluateTo(&result);
-    }
-
+    if(m_xmlQuery.isValid() && m_xmlQuery.evaluateTo(&result))
+        m_IsError = false;
     else
-    {
-        m_IsError = true;
         qWarning()<<__FUNCTION__<<" invalid query \n"<<aQuery;
-    }
     return result;
 }
 

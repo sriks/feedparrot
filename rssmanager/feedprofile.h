@@ -2,6 +2,7 @@
 #define FEEDPROFILE_H
 #include <QObject>
 #include <QTimer>
+#include <QPointer>
 #include "rssmanager.h"
 
 class QNetworkAccessManager;
@@ -15,30 +16,26 @@ class FeedProfile : public QObject
 {
     Q_OBJECT
 public:
-    explicit FeedProfile(FeedSubscription subscription,QObject *parent = 0);
+    explicit FeedProfile(QUrl url,int interval,QObject *parent = 0);
     ~FeedProfile();
-    bool isValid()
-    {
-        // Feed with negative interval is valid
-        return !mSubscription.sourceUrl().toString().isEmpty();
-    }
-    RSSParser* parser();
+    bool isValid() const;
     void update();
-    QString feedFileName();
-    int count();
+    QString feedFileName() const;
+    int count() const;
+    QUrl url() const;
+    int interval() const;
 signals:
     void updateAvailable(QUrl sourceUrl, int updatedItems);
     void error(QString errorDescription,QUrl sourceUrl);
 
 public slots:
-    FeedSubscription subscription(){return mSubscription;}
-
+    void start();
+    void stop();
+    void updateTimer(int msec);
     /** \param value less than zero stops the timer and all updates
      **/
-    void updateTimer(int mins);
-    bool isActive(){return mTimer.isActive();}
+    bool isActive() const;
     QString lastestItemTitle(){return mLatestElementTitle;}
-
 
 private slots:
     void handleTimeOut();
@@ -50,21 +47,24 @@ private slots:
 private:
     void setNetworkRequestActive(bool value);
     bool isNetworkRequestActive();
+    RSSParser* parser() const;
+
 private:
-    FeedSubscription mSubscription;
+    QUrl mSourceUrl;
+    int mInterval;
     QString mLatestElementTitle;
     QString mFeedFileName;
     QTimer mTimer;
     QNetworkAccessManager* mNetworkManager;
     QNetworkReply* mNetworkReply;
-    RSSParser* mParser;
-    int mCachedCount;
-    bool mInvalidate;
+    mutable RSSParser* mParser;
+    mutable int mCachedCount;
+    mutable bool mCacheInvalidated;
     // Dont use this directly, use setter and getter instead
     bool mNetworkRequestActive;
     // used only for test
     int mNetManCreatedCount;
-
+    int mFeedReachable;
 };
 
 #endif // FEEDPROFILE_H

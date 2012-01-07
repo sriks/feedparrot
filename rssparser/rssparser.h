@@ -38,6 +38,7 @@ public:
 public slots:
     Q_INVOKABLE bool isValid();
     Q_INVOKABLE void setSource(QIODevice* xmlSource);
+    Q_INVOKABLE QIODevice* source() const;
     Q_INVOKABLE bool setSourceFileName(QString sourceFileName);
     Q_INVOKABLE QUrl imageUrl();
     Q_INVOKABLE QString channelElement(RSSElement aElement);

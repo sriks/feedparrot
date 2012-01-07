@@ -7,24 +7,25 @@
 #include <QDebug>
 #include <QMutex>
 #include <QMutexLocker>
+#ifdef Q_OS_SYMBIAN
 #include <QNetworkProxyFactory>
+#endif
 #include "rssmanager.h"
 #include "feedprofile.h"
 #include "rssparser.h"
 
-//#define START_FETCH_WHEN_CREATED;
-
-const int KOneMinInMSec = 60000;
 QMutex mutex;
 
-FeedProfile::FeedProfile(FeedSubscription subscription,QObject *parent) :
+FeedProfile::FeedProfile(QUrl url,int interval,QObject *parent) :
     QObject(parent),
-    mSubscription(subscription),
+    mSourceUrl(url),
+    mInterval(interval),
     mNetworkManager(NULL),
     mNetworkReply(NULL),
     mParser(NULL),
-    mInvalidate(true),
-    mCachedCount(-1)
+    mCacheInvalidated(true),
+    mCachedCount(-1),
+    mFeedReachable(false)
 {
 #ifdef Q_OS_SYMBIAN
     QNetworkProxyFactory::setUseSystemConfiguration(true);
@@ -33,107 +34,101 @@ FeedProfile::FeedProfile(FeedSubscription subscription,QObject *parent) :
     mParser = new RSSParser(this);
     mNetManCreatedCount = 0; // test only
     connect(&mTimer,SIGNAL(timeout()),this,SLOT(handleTimeOut()));
-#ifdef START_FETCH_WHEN_CREATED
-    // start initial fetch
-    if(mSubscription.updateInterval())
-    { update(); }
-#endif
 }
 
-FeedProfile::~FeedProfile()
-{
+FeedProfile::~FeedProfile() {
     mTimer.stop();
-    if(isNetworkRequestActive())
-    {
-    mNetworkManager->deleteLater();
-    mNetworkReply->deleteLater();
+    if(isNetworkRequestActive())  {
+        mNetworkManager->deleteLater();
+        mNetworkReply->deleteLater();
     }
 }
 
-RSSParser* FeedProfile::parser()
-{
-    if(mInvalidate) {
-        mInvalidate = false;
-        QFile* feedFile = new QFile(feedFileName(),mParser);
-        if(feedFile->open(QIODevice::ReadOnly))
-        {
-            mParser->setSource(feedFile);
-        }
+bool FeedProfile::isValid() const {
+    // Feed with negative interval is valid
+    return mSourceUrl.isValid() && mFeedReachable;
+}
 
-//        RSSParser* parser = new RSSParser(this);
-//        QFile* feedFile = new QFile(feedFileName(),parser);
-//        if(feedFile->open(QIODevice::ReadOnly))
-//        {
-//            parser->setSource(feedFile);
-//        }
+RSSParser* FeedProfile::parser() const {
+    if(!mParser->source()) {
+        // Each profile acts on a singel xmlsource,
+        // so setting it once for ever.
+        // TODO: test this with quick update intervals.
+        QFile* src = new QFile(feedFileName(),mParser);
+        if(src->open(QIODevice::ReadOnly))
+            mParser->setSource(src);
     }
+    // TODO: should we reset read head to beginning of the file?
     return mParser;
 }
 
-void FeedProfile::update()
-{
+/*!
+  Updates the feed irresptive of interval. If start() is called prior to this method it will not effect the interval.
+  Hence a feed with negative interval is also updated.
+  Use this method for an on demand update.
+  **/
+void FeedProfile::update() {
     // Ignore if a request is already active
-    if(!isNetworkRequestActive())
-    {
-        // This is an on-demand update, so dont restart the timer.
-        // We have to update the feed even if update interval is negative.
-        // A client may just need to update on demand and not in periodic interval.
+    if(!isNetworkRequestActive())     {
         handleTimeOut();
     }
 }
 
-void FeedProfile::updateTimer(int mins)
-{
-    mTimer.stop();
-
-    // start timer if it is a valid interval
-    if(mins>=0)
-    {
-    mTimer.setInterval(mins * KOneMinInMSec);
-    mTimer.start();
-    }
-
-    // negative timer value tells to stop updates
-    else
-    {
-        if(isNetworkRequestActive())
-        {mNetworkReply->abort();}
-    }
+void FeedProfile::start() {
+    updateTimer(mInterval);
+    if(mInterval >= 0)
+        update();
 }
 
-void FeedProfile::handleTimeOut()
-{
-    // ignore
-    if(isNetworkRequestActive()) { return; }
+void FeedProfile::stop() {
+    updateTimer(-1);
+}
 
-    mInvalidate = true;
+void FeedProfile::updateTimer(int msec) {
+    mTimer.stop();
+    if(isNetworkRequestActive() && mNetworkReply)
+        mNetworkReply->abort();
+    // start timer if it is a valid interval
+    if(msec>=0) {
+        mTimer.setInterval(msec);
+        mTimer.start();
+    }
+    // negative timer value tells to stop updates
+}
+
+bool FeedProfile::isActive() const {
+    return mTimer.isActive();
+}
+
+void FeedProfile::handleTimeOut() {
+    // ignore
+    if(isNetworkRequestActive())
+        return;
+
+    mCacheInvalidated = true;
     // Fetch feed from source
     mNetworkManager = new QNetworkAccessManager(this); mNetManCreatedCount++;
     connect(mNetworkManager, SIGNAL(finished(QNetworkReply*)),
-            this, SLOT(replyFinished(QNetworkReply*)));
-    connect(mNetworkManager,SIGNAL(destroyed(QObject*)),this,SLOT(handleNetworkMgrDestroyed(QObject*)));
-    mNetworkReply = mNetworkManager->get(QNetworkRequest(mSubscription.sourceUrl()));
+            this, SLOT(replyFinished(QNetworkReply*)),Qt::UniqueConnection);
+    connect(mNetworkManager,SIGNAL(destroyed(QObject*)),
+            this,SLOT(handleNetworkMgrDestroyed(QObject*)),Qt::UniqueConnection);
+    mNetworkReply = mNetworkManager->get(QNetworkRequest(mSourceUrl));
     setNetworkRequestActive(true);
 }
 
-void FeedProfile::replyFinished(QNetworkReply *reply)
-{
+void FeedProfile::replyFinished(QNetworkReply *reply) {
     QMutex m;
     m.lock();
         setNetworkRequestActive(false);
             // No error
-            if(QNetworkReply::NoError == reply->error())
-            {
+            if(QNetworkReply::NoError == reply->error()) {
                 // read contents
                 QByteArray content = reply->readAll();
                 handleContent(content);
-            }
-
-            // handle error
-            else
-            {
+            } else {
+                // handle error
                 qWarning()<<__PRETTY_FUNCTION__<<":"<<reply->errorString();
-                emit error(reply->errorString(),mSubscription.sourceUrl());
+                emit error(reply->errorString(),mSourceUrl.toString());
             }
         reply->deleteLater();
         // Feeds are usually gathered in periodic intervals.
@@ -142,110 +137,104 @@ void FeedProfile::replyFinished(QNetworkReply *reply)
     m.unlock();
 }
 
-void FeedProfile::handleContent(QByteArray content)
-{
-    // valid content
-    if(content.size())
-    {
+void FeedProfile::handleContent(QByteArray content) {
+    if(content.size()) {
             QFile feedFile(feedFileName());
             if(feedFile.exists())
-            {
                 feedFile.remove();
-            }
 
-            if(feedFile.open(QIODevice::ReadWrite))
-            {
+            if(feedFile.open(QIODevice::ReadWrite)) {
                 QString tmp(content);
                 feedFile.write(tmp.toUtf8());
                 feedFile.close();
-            }
-
-            else
-            {
-                emit error("Cannot store the feed",mSubscription.sourceUrl());
+            } else {
+                emit error("Cannot store the feed",mSourceUrl.toString());
                 return;
             }
 
             int newItemsCount=0;
             QFile readFeedFile(feedFileName());
-            qDebug()<<readFeedFile.open(QIODevice::ReadOnly);
+            readFeedFile.open(QIODevice::ReadOnly);
             RSSParser* parser = new RSSParser(this);
             parser->setSource(&readFeedFile);
             QStringList titles = parser->itemElements(RSSParser::title);
+            bool perr = parser->isError();
             parser->deleteLater();
             readFeedFile.close();
 
+            if(perr) {
+                emit error("Unable to parse",mSourceUrl.toString());
+                return;
+            }
+
             int totalItems = titles.count();
-            if(totalItems)
-            {
+            if(totalItems) {
+                mFeedReachable = true;
                 // Assume all items are new
                 newItemsCount = totalItems;
 
                 // Check for updates
                 if(!mLatestElementTitle.isEmpty() && (titles.indexOf(mLatestElementTitle) >= 0))
-                {
                     newItemsCount = titles.indexOf(mLatestElementTitle);
-                }
-
                 // New updates available
-                if(newItemsCount)
-                {
+                if(newItemsCount) {
                     // XQuery numbering starts with 1, so we can send count as such
                     mLatestElementTitle = titles[0];
                     // emit this signal even if there is no active timer.
                     // some clients may need update on demand.
-                    emit updateAvailable(mSubscription.sourceUrl(),newItemsCount);
+                    emit updateAvailable(mSourceUrl,newItemsCount);
                 }
-            }
-
-            // Parsing error, No items found in parsing
-            else
-            {
-                emit error(tr("Cannot parse feed"),mSubscription.sourceUrl());
+            } else {
+                emit error(tr("Cannot parse feed"),mSourceUrl.toString());
             }
 
      }
 }
 
-QString FeedProfile::feedFileName()
-{
+QString FeedProfile::feedFileName() const {
     QString filename;
-    filename.setNum( qHash(mSubscription.sourceUrl().toString()) );
+    filename.setNum( qHash(mSourceUrl.toString()) );
     filename.append(".xml");
     return filename;
 }
 
-int FeedProfile::count() {
+int FeedProfile::count() const {
     // TODO: do caching and return result
-    if(mInvalidate || -1 == mCachedCount)
+    if(mCacheInvalidated || -1 == mCachedCount) {
         mCachedCount = parser()->count();
+        mCacheInvalidated = false;
+    }
     return mCachedCount;
 }
 
+QUrl FeedProfile::url() const {
+    return mSourceUrl;
+}
+
+int FeedProfile::interval() const {
+    return mInterval;
+}
+
 // test slot
-void FeedProfile::handleNetworkMgrDestroyed(QObject *obj)
-{
+void FeedProfile::handleNetworkMgrDestroyed(QObject *obj) {
     QMutex m;
     m.lock();
     mNetManCreatedCount--;
-        if(obj)
-        {
-            obj->objectName();
-        }
+    if(obj)
+        obj->objectName();
     m.unlock();
 }
 
-void FeedProfile::setNetworkRequestActive(bool value)
-{
+void FeedProfile::setNetworkRequestActive(bool value) {
     QMutex m;
     m.lock();
     mNetworkRequestActive = value;
     m.unlock();
 }
 
-bool FeedProfile::isNetworkRequestActive()
-{
+bool FeedProfile::isNetworkRequestActive() {
     return mNetworkRequestActive;
 }
+
 
 // eof
