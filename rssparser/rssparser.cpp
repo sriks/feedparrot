@@ -6,6 +6,8 @@
 #include <QXmlItem>
 #include "rssparser.h"
 
+// TODO: add method to query if an element exists
+
 // FIXME: handle encoding properly
 // XQueries
 //
@@ -201,7 +203,6 @@ QString RSSParser::channelElement(QString userElement)
 
 /*! \brief queries an item element
     \param itemIndex Index of the item in the feed
-    \attention In XQuery item count starts from 1.
     \param element Element of intrest
     \return If no such element exist returns empty QString.
     \sa itemElements(), isError()
@@ -209,19 +210,18 @@ QString RSSParser::channelElement(QString userElement)
 QString RSSParser::itemElement(int itemIndex,RSSElement element)
 {
     QString enumString = enumToString(element);
-    return executeQuery(KXqItemQuery.arg(itemIndex).arg(enumString));
+    return executeQuery(KXqItemQuery.arg(itemIndex+1).arg(enumString));
 }
 
 /*! \brief queries an item element provided as string
     \param itemIndex Index of the item in the feed
-    \attention In XQuery item count starts from 1.
     \param userElement Element of intrest
     \return If no such element exist returns empty QString.
     \sa itemElements(), isError()
 */
 QString RSSParser::itemElement(int itemIndex,QString userElement)
 {
-    return executeQuery(KXqItemQuery.arg(itemIndex).arg(userElement));
+    return executeQuery(KXqItemQuery.arg(itemIndex+1).arg(userElement));
 }
 
 /*! \brief Convinience method to query all items for the element
@@ -249,17 +249,14 @@ QStringList RSSParser::itemElements(QString userElement)
 
 /*! \brief Returns categories of a particular item in feed
     \param itemIndex Index of intrest
-    \attention In XQuery item count starts from 1.
     \return returns empty QStringList if no such item exists or in case of error
     \sa isError(), categories()
 */
 QStringList RSSParser::category(int itemIndex)
 {
     // Query all items
-    if(itemIndex)
-    {
-    return executeQueryAsList(KXqItemCategories.arg(QString().number(itemIndex)));
-    }
+    if(itemIndex >= 0)
+        return executeQueryAsList(KXqItemCategories.arg(QString().number(itemIndex+1)));
 return QStringList();
 }
 

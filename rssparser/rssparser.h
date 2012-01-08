@@ -52,9 +52,7 @@ public slots:
     Q_INVOKABLE int count();
     bool isError();
     static QString decodeHtml(const QString& encodedHtml);
-    // TODO: add method to query if an element exists
 
-//private slots:
 public slots:
     QString executeQuery(const QString& aQuery);
     QStringList executeQueryAsList(const QString& aQuery);
