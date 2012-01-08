@@ -18,7 +18,7 @@ public:
     ~RSSManager();
 
 public slots:
-    bool add(QUrl url,int msec = 60*1000);
+    bool add(QUrl url,int msec = 3600000);
     bool remove(QUrl url);
     void removeAll();
 
@@ -44,7 +44,7 @@ signals:
       \arg url Subscription URL on which new feed content is available.
       \arg updateditems Number of feed items that are updated.
       */
-    void updateAvailable(QUrl url, int updateditems);
+    void updateAvailable(QUrl url, int updatedItems);
     void error(QString errorDescription,QUrl url);
 
 private slots:
