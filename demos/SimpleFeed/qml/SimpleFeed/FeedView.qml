@@ -74,6 +74,7 @@ Page {
                 anchors.fill: parent;
                 clip: true;
                 anchors.horizontalCenter: parent.horizontalCenter;
+                cacheBuffer: 1000;
                 delegate: feedItemDelegate;
             }
         }
