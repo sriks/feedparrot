@@ -42,9 +42,9 @@ signals:
     /*!
       \brief Signal is emitted when new feed content is available
       \arg url Subscription URL on which new feed content is available.
-      \arg updateditems Number of feed items that are updated.
+      \arg newItemsCount Number of feed items that are newly added after update.
       */
-    void updateAvailable(QUrl url, int updatedItems);
+    void updateAvailable(QUrl url, int newItemsCount);
     void error(QString errorDescription,QUrl url);
 
 private slots:

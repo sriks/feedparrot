@@ -22,7 +22,7 @@ Page {
                 parser = engine.parser(src);
                 if(parser) {
                     channel.feedName = parser.channelElement("title");
-                    feedView.model = updatedItems;
+                    feedView.model = parser.count();
                     status = "";
                 }
             }
