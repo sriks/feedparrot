@@ -37,7 +37,8 @@ public slots:
     void setInterval(QUrl url, int msec);
     void updateAll();
     void update(QUrl url);
-
+    void setUpdateOnNewItemsOnly(QUrl url, bool val);
+    bool isUpdatingOnNewItemsOnly(QUrl url) const;
 signals:
     /*!
       \brief Signal is emitted when new feed content is available

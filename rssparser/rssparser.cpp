@@ -94,7 +94,7 @@ const QString KXmlSource("xmlSource");
        int count = parser.itemCount();
 
        // get title of first item
-       QString title = parser.itemElement(1,RSSParser::title); // XQuery numbering starts from 1
+       QString title = parser.itemElement(0,RSSParser::title);
        }
     }
     sourceFile.close();

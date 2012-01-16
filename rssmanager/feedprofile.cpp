@@ -25,7 +25,8 @@ FeedProfile::FeedProfile(QUrl url,int interval,QObject *parent) :
     mParser(NULL),
     mCacheInvalidated(true),
     mCachedCount(-1),
-    mFeedReachable(false)
+    mFeedReachable(false),
+    mSmartUpdate(true)
 {
 #ifdef Q_OS_SYMBIAN
     QNetworkProxyFactory::setUseSystemConfiguration(true);
@@ -183,11 +184,13 @@ void FeedProfile::handleContent(QByteArray content) {
                     // emit this signal even if there is no active timer.
                     // some clients may need update on demand.
                     emit updateAvailable(mSourceUrl,newItemsCount);
+                } else if(mSmartUpdate && 0 == newItemsCount) {
+                    emit updateAvailable(mSourceUrl,totalItems);
                 }
+
             } else {
                 emit error(tr("Cannot parse feed"),mSourceUrl.toString());
             }
-
      }
 }
 
@@ -213,6 +216,14 @@ QUrl FeedProfile::url() const {
 
 int FeedProfile::interval() const {
     return mInterval;
+}
+
+void FeedProfile::setSmartUpdate(bool val) {
+    mSmartUpdate = val;
+}
+
+bool FeedProfile::hasSmartUpdate() const {
+    return mSmartUpdate;
 }
 
 // test slot

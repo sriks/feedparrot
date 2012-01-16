@@ -180,6 +180,31 @@ void RSSManager::update(QUrl url) {
 }
 
 /*!
+  Sets smart update to \a val.
+  If this is set to true, updateAvailable() is emitted only if any new items are avaible.
+  If set to false, updateAvailable() is emitted on every feed fetch irrespective of new items avaible in the fetch.
+  The default value is true.
+  \sa isUpdatingOnNewItemsOnly(QUrl)
+  **/
+void RSSManager::setUpdateOnNewItemsOnly(QUrl url, bool val) {
+    FeedProfile* p = d->profile(url);
+    if(p)
+       p->setSmartUpdate(val);
+}
+
+/*!
+  Returns whether \a url is updating on new items only.
+  \sa setUpdateOnNewItemsOnly(QUrl,bool)
+  **/
+bool RSSManager::isUpdatingOnNewItemsOnly(QUrl url) const {
+    bool res = false;
+    FeedProfile* p = d->profile(url);
+    if(p)
+      res = p->hasSmartUpdate();
+return res;
+}
+
+/*!
 \brief Provides a parser initialized and ready to parse results from url.
 \attention Ownership is transfered to the client. Client should call deleteLater() when finished with parsing.
 \arg url URL for which the results should be parsed.

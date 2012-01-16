@@ -24,6 +24,8 @@ public:
     int count() const;
     QUrl url() const;
     int interval() const;
+    void setSmartUpdate(bool val);
+    bool hasSmartUpdate() const;
 signals:
     void updateAvailable(QUrl sourceUrl, int updatedItems);
     void error(QString errorDescription,QUrl sourceUrl);
@@ -65,6 +67,7 @@ private:
     // used only for test
     int mNetManCreatedCount;
     int mFeedReachable;
+    bool mSmartUpdate;
 };
 
 #endif // FEEDPROFILE_H
