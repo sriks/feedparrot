@@ -118,6 +118,7 @@ void FeedProfile::handleTimeOut() {
 }
 
 void FeedProfile::replyFinished(QNetworkReply *reply) {
+    qDebug()<<Q_FUNC_INFO;
     QMutex m;
     m.lock();
         setNetworkRequestActive(false);

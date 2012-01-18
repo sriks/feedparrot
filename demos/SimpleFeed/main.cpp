@@ -10,6 +10,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QScopedPointer<QApplication> app(createApplication(argc, argv));
     RSSManager engine;
     qmlRegisterType<RSSParser>();
+
     QmlApplicationViewer viewer;
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationLockPortrait);
     viewer.rootContext()->setContextProperty("engine",(QObject*)&engine);

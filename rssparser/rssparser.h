@@ -36,7 +36,7 @@ public:
     };
 
 public slots:
-    Q_INVOKABLE bool isValid();
+    Q_INVOKABLE bool isValid() const;
     Q_INVOKABLE void setSource(QIODevice* xmlSource);
     Q_INVOKABLE QIODevice* source() const;
     Q_INVOKABLE bool setSourceFileName(QString sourceFileName);
@@ -50,7 +50,7 @@ public slots:
     Q_INVOKABLE QStringList category(int itemIndex);
     Q_INVOKABLE QList<QStringList> categories();
     Q_INVOKABLE int count();
-    bool isError();
+    bool isError() const;
     static QString decodeHtml(const QString& encodedHtml);
 
 public slots:

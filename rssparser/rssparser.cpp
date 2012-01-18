@@ -119,8 +119,7 @@ const QString KXmlSource("xmlSource");
   */
 
 RSSParser::RSSParser(QObject *parent) :
-    QObject(parent)
-{
+    QObject(parent) {
     m_xmlSource = NULL;
     m_IsError = false;
 }
@@ -133,18 +132,12 @@ RSSParser::~RSSParser() {}
   Parser is valid if a readable non empty source is set using \ref setSource
   \return true if valid
   **/
-bool RSSParser::isValid()
-{
+bool RSSParser::isValid() const {
     if(m_xmlSource)
-    {
-    return ( (m_xmlSource->isReadable()) &&
-             (m_xmlSource->size()) );
-    }
-
+        return ( (m_xmlSource->isReadable()) &&
+                 (m_xmlSource->size()) );
     else
-    {
-    return !m_xmlSourceFileName.isEmpty();
-    }
+        return !m_xmlSourceFileName.isEmpty();
 }
 
 /*! \brief set RSS data source.
@@ -153,8 +146,7 @@ bool RSSParser::isValid()
     use \ref isValid() to validate the parser after setting source
     \param xmlSource source of xml
 */
-void RSSParser::setSource(QIODevice* xmlSource)
-{
+void RSSParser::setSource(QIODevice* xmlSource) {
       m_xmlSource = xmlSource;
       m_xmlQuery.bindVariable(KXmlSource,xmlSource);
 }
@@ -164,8 +156,7 @@ QIODevice *RSSParser::source() const {
 }
 
 /*! \brief Experimental API to set a filename as source. */
-bool RSSParser::setSourceFileName(QString sourceFileName)
-{
+bool RSSParser::setSourceFileName(QString sourceFileName) {
     if(sourceFileName.isEmpty())
     {return false;}
     m_xmlSourceFileName = sourceFileName;
@@ -175,8 +166,7 @@ bool RSSParser::setSourceFileName(QString sourceFileName)
 }
 
 /*! \brief returns URL of channel image  */
-QUrl RSSParser::imageUrl()
-{
+QUrl RSSParser::imageUrl() {
     return QUrl(executeQuery(KXqChannelImageUrl));
 }
 
@@ -185,8 +175,7 @@ QUrl RSSParser::imageUrl()
     \return If no such element exist returns empty QString.
     \sa isError()
 */
-QString RSSParser::channelElement(RSSElement element)
-{
+QString RSSParser::channelElement(RSSElement element) {
     QString enumString = enumToString(element);
     return executeQuery(KXqChannelElementQuery.arg(enumString));
 }
@@ -196,8 +185,7 @@ QString RSSParser::channelElement(RSSElement element)
     \return If no such element exist returns empty QString.
     \sa isError()
 */
-QString RSSParser::channelElement(QString userElement)
-{
+QString RSSParser::channelElement(QString userElement) {
     return executeQuery(KXqChannelElementQuery.arg(userElement));
 }
 
@@ -207,8 +195,7 @@ QString RSSParser::channelElement(QString userElement)
     \return If no such element exist returns empty QString.
     \sa itemElements(), isError()
 */
-QString RSSParser::itemElement(int itemIndex,RSSElement element)
-{
+QString RSSParser::itemElement(int itemIndex,RSSElement element) {
     QString enumString = enumToString(element);
     return executeQuery(KXqItemQuery.arg(itemIndex+1).arg(enumString));
 }
@@ -219,8 +206,7 @@ QString RSSParser::itemElement(int itemIndex,RSSElement element)
     \return If no such element exist returns empty QString.
     \sa itemElements(), isError()
 */
-QString RSSParser::itemElement(int itemIndex,QString userElement)
-{
+QString RSSParser::itemElement(int itemIndex,QString userElement) {
     return executeQuery(KXqItemQuery.arg(itemIndex+1).arg(userElement));
 }
 
@@ -236,14 +222,12 @@ QString RSSParser::itemElement(int itemIndex,QString userElement)
     For categories use special method \ref category() \ref categories()
     \sa itemElement(), itemCount(), isError()
  */
-QStringList RSSParser::itemElements(RSSElement element)
-{
+QStringList RSSParser::itemElements(RSSElement element) {
     QString enumString = enumToString(element);
     return executeQueryAsList(KXqAllItemElementsQuery.arg(enumString));
 }
 
-QStringList RSSParser::itemElements(QString userElement)
-{
+QStringList RSSParser::itemElements(QString userElement) {
     return executeQueryAsList(KXqAllItemElementsQuery.arg(userElement));
 }
 
@@ -252,8 +236,7 @@ QStringList RSSParser::itemElements(QString userElement)
     \return returns empty QStringList if no such item exists or in case of error
     \sa isError(), categories()
 */
-QStringList RSSParser::category(int itemIndex)
-{
+QStringList RSSParser::category(int itemIndex) {
     // Query all items
     if(itemIndex >= 0)
         return executeQueryAsList(KXqItemCategories.arg(QString().number(itemIndex+1)));
@@ -282,25 +265,19 @@ int RSSParser::count() {
 }
 
 /*! \brief returns true if the latest query resulted in error.*/
-bool RSSParser::isError()
-{
+bool RSSParser::isError() const {
     return m_IsError;
 }
 
 // Internal API
-QString RSSParser::executeQuery(const QString& aQuery)
-{
+QString RSSParser::executeQuery(const QString& aQuery) {
     m_IsError = false;
     m_xmlQuery.setQuery(aQuery);
     QString result = QString();
 
-    if(m_xmlQuery.isValid())
-    {
+    if(m_xmlQuery.isValid()) {
        m_xmlQuery.evaluateTo(&result);
-    }
-
-    else
-    {
+    } else {
         m_IsError = true;
         qWarning()<<__FUNCTION__<<" invalid query \n"<<aQuery;
     }
@@ -309,8 +286,7 @@ QString RSSParser::executeQuery(const QString& aQuery)
 
 // Internal API
 // Executes a xquery that returns as a sequence of sting list
-QStringList RSSParser::executeQueryAsList(const QString& aQuery)
-{
+QStringList RSSParser::executeQueryAsList(const QString& aQuery) {
     m_IsError = true;
     m_xmlQuery.setQuery(aQuery);
     QStringList result;
@@ -322,17 +298,16 @@ QStringList RSSParser::executeQueryAsList(const QString& aQuery)
 }
 
 // Internal API
-QString RSSParser::enumToString(RSSParser::RSSElement aElement)
-{
+QString RSSParser::enumToString(RSSParser::RSSElement aElement) {
     int index = metaObject()->indexOfEnumerator("RSSElement");
     QMetaEnum menum = metaObject()->enumerator(index);
     return menum.valueToKey(aElement);
 }
 
-// Internal API
-// Decodes HTML encoded string.
-QString RSSParser::decodeHtml(const QString& encodedHtml)
-{
+/*!
+  Decodes to HTML
+  **/
+QString RSSParser::decodeHtml(const QString& encodedHtml) {
     QString temp = encodedHtml;
     temp.replace("&amp;", "&");
     temp.replace("&apos;", "'");
