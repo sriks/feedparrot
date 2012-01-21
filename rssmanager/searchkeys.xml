@@ -1,0 +1,14 @@
+<!-- This xml holds all intrested tags as keys -->
+<!-- NOTE: Add new tag at the end, text casing is not considered -->
+<!-- Author: Srikanth Sombhatla -->
+<keys>
+<key>nokia</key>
+<key>symbian</key>
+<key>symbian^3</key>
+<key>symbian^4</key>
+<key>S^3</key>
+<key>S^4</key>
+<key>meego</key>
+<key>maemo</key>
+<key>qt</key>
+<keys>
