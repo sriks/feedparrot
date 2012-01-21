@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/181/trunk/rsssuite/rssparser
+END
+rssparser.pro
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/100/trunk/rsssuite/rssparser/rssparser.pro
+END
+main.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/53/trunk/rsssuite/rssparser/main.cpp
+END
+rssparser.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/181/trunk/rsssuite/rssparser/rssparser.cpp
+END
+rssparser.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/192/trunk/rsssuite/rssparser/rssparser.h
+END
+rssparser.pri
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/134/trunk/rsssuite/rssparser/rssparser.pri
+END

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/100/trunk/rsssuite/unittest/unittest_rssparser
+END
+unittest_rssparser.pro
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/88/trunk/rsssuite/unittest/unittest_rssparser/unittest_rssparser.pro
+END
+test_rssparser.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/100/trunk/rsssuite/unittest/unittest_rssparser/test_rssparser.cpp
+END
+main.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/64/trunk/rsssuite/unittest/unittest_rssparser/main.cpp
+END
+test_rssparser.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/64/trunk/rsssuite/unittest/unittest_rssparser/test_rssparser.h
+END
+testfeed.htm
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/59/trunk/rsssuite/unittest/unittest_rssparser/testfeed.htm
+END
+resource.qrc
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/100/trunk/rsssuite/unittest/unittest_rssparser/resource.qrc
+END
