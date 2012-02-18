@@ -1,9 +1,15 @@
 #include <QDebug>
 #include <QMetaType>
 #include <QXmlStreamWriter>
+#include <QCoreApplication>
 #include <QFile>
+#include <QDir>
 #include "rssmanager.h"
 #include "feedprofile.h"
+
+#if defined(DC_HARMATTAN)
+QString DATA_LOCATION = "/home/user/.local/share//data/";
+#endif
 
 class RSSManagerPrivate {
 public:
@@ -14,10 +20,11 @@ public:
 };
 
 const QString KFeedStorageFileName("feedstore.xml");
-const QString KFeedStorageFeedElement("feed");
-const QString KFeedStorageurl("url");
+const QString KFeedStorageFeedElement("feedstore");
+const QString KFeedItem("item");
+const QString KFeedStorageurl("link");
 const QString KFeedStorageUpdatePeriod("updateperiod");
-const QString KFeedStorageLatestItemTitle("latestitemtitle");
+const QString KFeedStorageLatestItemTitle("title");
 
 const QString KOrganisationName("decii");
 const QString KAppName("rssmanager");
@@ -27,52 +34,154 @@ const QString KFeedList("feedlist");
 RSSManager::RSSManager(QObject *parent) :
     QObject(parent) {
     d = new RSSManagerPrivate;
-    // read all preferences
-    //internalize();
+    restoreState();
+}
+
+/*!
+  Creates an instance of RSSManager.
+  This instance is parented to QCoreApplication for convinience, but it can be reparented to suit your need.
+  If RSSManager is created using new, calling instance() will return a new instance rather than the instance created with new.
+  Hence use instance and new in a mutually exclusive manner.
+
+  **/
+RSSManager *RSSManager::instance() {
+    static RSSManager* m = NULL;
+    if(!m)
+        m = new RSSManager(QCoreApplication::instance());
+    return m;
+}
+
+/*!
+  Returns storage path where feed related data can be stored.
+  Clients need to remove this path when uninstalling in platforms like Harmattan.
+
+     basePath is <storagepath>/<appname>/tmp
+     Storage path in for different platforms...
+        1.Symbian is <privatefolder>
+        2.Harmattan is /home/user/.local/share//data/
+        3.Others same as QCoreApplication::applicationDirPath()
+
+        For example in harmattan if the application name is "TechNews" then storagePath would return
+        /home/user/.local/share//data/TechNews
+  **/
+QString RSSManager::storagePath() {
+    static QString basePath;
+    if(basePath.isEmpty()) {
+        #if defined(DC_HARMATTAN)
+        basePath = DATA_LOCATION;
+        #else
+        basePath = QCoreApplication::applicationDirPath();
+        #endif
+
+        QString appname = QCoreApplication::applicationName();
+        if(appname.isEmpty()) {
+            qWarning()<<"Required to speicfy appname using QApplication::setApplicationName().";
+            basePath.clear();
+            return QString();
+        }
+
+        QDir d(basePath);
+        if(!d.cd(appname)) {
+            if(!d.mkdir(appname)) {
+                qWarning()<<Q_FUNC_INFO<<"Unable to create folder "<<appname<<" in "<<basePath;
+                basePath.clear();
+                return QString();
+            } else {
+                d.cd(appname);
+            }
+        }
+        basePath = d.absolutePath();
+    }
+    return basePath;
 }
 
 RSSManager::~RSSManager() {
     // write all preferences
-    // externalize();
+    saveState();
     delete d;
 }
 
-/* Not supported yet
-//bool RSSManager::externalize() {
-//    // Write all subscriptions to persistent storage as XML
-//    QFile storageFile(KFeedStorageFileName, this);
-//    if(storageFile.open(QIODevice::WriteOnly))
-//    {
-//    QXmlStreamWriter xmlWriter(&storageFile);
-//    xmlWriter.setAutoFormatting(true);
-//    xmlWriter.writeStartDocument();
-//    QList<FeedProfile*>  profiles = d->profiles.values();
-//        for(int i=0;i<profiles.count();i++)
-//        {
-//            xmlWriter.writeStartElement(KFeedStorageFeedElement);
-//            xmlWriter.writeTextElement(KFeedStorageurl,
-//                                       profiles.at(i)->url().toString());
-//            xmlWriter.writeTextElement(KFeedStorageUpdatePeriod,
-//                                       QString().setNum(profiles.at(i)->interval()));
-//            xmlWriter.writeTextElement(KFeedStorageLatestItemTitle,
-//                                       profiles.at(i)->lastestItemTitle());
-//            xmlWriter.writeEndElement();
-//        }
-//    xmlWriter.writeEndDocument();
-//    storageFile.close();
-//    return true;
-//    }
+/*!
+  Saves state to local storage
+  **/
+bool RSSManager::saveState() {
+    // Write all subscriptions to persistent storage as XML
+    QString basePath = storagePath();
+    if(basePath.isEmpty())
+        return false;
 
-//    // file not opened
-//    else {
-//        return false;
-//    }
-//}
+    QFile storageFile(basePath + "/" + KFeedStorageFileName);
+    if(storageFile.open(QIODevice::WriteOnly)) {
+        QXmlStreamWriter xmlWriter(&storageFile);
+        xmlWriter.setAutoFormatting(true);
+        xmlWriter.writeStartDocument();
+        xmlWriter.writeStartElement(KFeedStorageFeedElement);
+        QList<FeedProfile*>  profiles = d->profiles.values();
+            for(int i=0;i<profiles.count();i++) {
+                xmlWriter.writeStartElement(KFeedItem);
+                xmlWriter.writeTextElement(KFeedStorageurl,
+                                           profiles.at(i)->url().toString());
+                xmlWriter.writeTextElement(KFeedStorageUpdatePeriod,
+                                           QString().setNum(profiles.at(i)->interval()));
+                xmlWriter.writeTextElement(KFeedStorageLatestItemTitle,
+                                           profiles.at(i)->latestItemTitle());
+                xmlWriter.writeEndElement();
+            }
+        xmlWriter.writeEndDocument();
+        storageFile.close();
+        return true;
+    }
 
-//bool RSSManager::internalize() {
-//    return true;
-//}
-*/
+    // file not opened
+    else {
+        return false;
+    }
+}
+
+/*!
+  Reloads from saved state
+  **/
+bool RSSManager::restoreState() {
+    QString basePath = storagePath();
+    if(basePath.isEmpty())
+        return false;
+
+    QFile storageFile(basePath + "/" + KFeedStorageFileName);
+    if(storageFile.open(QIODevice::ReadOnly)) {
+        RSSParser* p = new RSSParser(this);
+        p->setSource(&storageFile);
+        int c = p->count();
+        for(int i=0;i<c;++i) {
+            QUrl url(p->itemElement(i,KFeedStorageurl).trimmed());
+            QString title = p->itemElement(i,KFeedStorageLatestItemTitle).trimmed();
+            QString invStr = p->itemElement(i,KFeedStorageUpdatePeriod).trimmed();
+            add(url,invStr.toInt()); // TODO: check base when converting str to int
+            FeedProfile* fp = d->profile(url);
+            if(fp)
+                fp->setLatestItemTitle(title);
+        }
+    }
+    return true;
+}
+
+/*!
+  Clears saved state.
+  **/
+bool RSSManager::clearState() {
+    QString basePath = storagePath();
+    if(basePath.isEmpty())
+        return false;
+    return QFile::remove(basePath+"/"+KFeedStorageFileName);
+}
+
+/*!
+  Fetches updates for feeds which were added in previous session.
+  **/
+void RSSManager::fetchUpdates() {
+    restoreState();
+    updateAll();
+}
+
 /*!
   Adds new feed \a url to manager with interval \a msec. If does nothing if \a url is already added.
   \return returns true if added successfully.

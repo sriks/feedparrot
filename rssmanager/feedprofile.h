@@ -26,6 +26,7 @@ public:
     int interval() const;
     void setSmartUpdate(bool val);
     bool hasSmartUpdate() const;
+
 signals:
     void updateAvailable(QUrl sourceUrl, int updatedItems);
     void error(QString errorDescription,QUrl sourceUrl);
@@ -37,7 +38,8 @@ public slots:
     /** \param value less than zero stops the timer and all updates
      **/
     bool isActive() const;
-    QString lastestItemTitle(){return mLatestElementTitle;}
+    QString latestItemTitle() const;
+    void setLatestItemTitle(QString title);
 
 private slots:
     void handleTimeOut();

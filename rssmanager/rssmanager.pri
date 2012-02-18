@@ -8,3 +8,8 @@ SOURCES += $$PWD/rssmanager.cpp \
 #           $$PWD/RSSModel.cpp
 include(../rssparser/rssparser.pri)
 QT += network xmlpatterns
+
+contains(MEEGO_EDITION,harmattan) {
+    message ('Buidling for Harmattan')
+    DEFINES += DC_HARMATTAN
+}

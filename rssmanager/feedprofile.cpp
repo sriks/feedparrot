@@ -7,12 +7,15 @@
 #include <QDebug>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QDir>
 #ifdef Q_OS_SYMBIAN
 #include <QNetworkProxyFactory>
 #endif
 #include "rssmanager.h"
 #include "feedprofile.h"
 #include "rssparser.h"
+
+const QString TMP_DIR("tmp");
 
 QMutex mutex;
 
@@ -43,6 +46,7 @@ FeedProfile::~FeedProfile() {
         mNetworkManager->deleteLater();
         mNetworkReply->deleteLater();
     }
+    QFile::remove(feedFileName());
 }
 
 bool FeedProfile::isValid() const {
@@ -101,6 +105,14 @@ bool FeedProfile::isActive() const {
     return mTimer.isActive();
 }
 
+QString FeedProfile::latestItemTitle() const {
+    return mLatestElementTitle;
+}
+
+void FeedProfile::setLatestItemTitle(QString title) {
+    mLatestElementTitle = title;
+}
+
 void FeedProfile::handleTimeOut() {
     // ignore
     if(isNetworkRequestActive())
@@ -118,7 +130,6 @@ void FeedProfile::handleTimeOut() {
 }
 
 void FeedProfile::replyFinished(QNetworkReply *reply) {
-    qDebug()<<Q_FUNC_INFO;
     QMutex m;
     m.lock();
         setNetworkRequestActive(false);
@@ -142,6 +153,7 @@ void FeedProfile::replyFinished(QNetworkReply *reply) {
 void FeedProfile::handleContent(QByteArray content) {
     if(content.size()) {
             QFile feedFile(feedFileName());
+
             if(feedFile.exists())
                 feedFile.remove();
 
@@ -172,22 +184,22 @@ void FeedProfile::handleContent(QByteArray content) {
             int totalItems = titles.count();
             if(totalItems) {
                 mFeedReachable = true;
+
                 // Assume all items are new
                 newItemsCount = totalItems;
 
                 // Check for updates
                 if(!mLatestElementTitle.isEmpty() && (titles.indexOf(mLatestElementTitle) >= 0))
                     newItemsCount = titles.indexOf(mLatestElementTitle);
+
+                mLatestElementTitle = titles.at(0);
                 // New updates available
-                if(newItemsCount) {
-                    // XQuery numbering starts with 1, so we can send count as such
-                    mLatestElementTitle = titles[0];
-                    // emit this signal even if there is no active timer.
-                    // some clients may need update on demand.
-                    emit updateAvailable(mSourceUrl,newItemsCount);
-                } else if(mSmartUpdate && 0 == newItemsCount) {
+                // emit this signal even if there is no active timer.
+                // some clients may need update on demand.
+                if(!mSmartUpdate)
                     emit updateAvailable(mSourceUrl,totalItems);
-                }
+                else if(mSmartUpdate)
+                    emit updateAvailable(mSourceUrl,newItemsCount);
 
             } else {
                 emit error(tr("Cannot parse feed"),mSourceUrl.toString());
@@ -195,13 +207,38 @@ void FeedProfile::handleContent(QByteArray content) {
      }
 }
 
+/*!
+  Returns feed file absolute path.
+  This file is where it stores the feed and processes it.
+  This file is deleted when it's FeedProfile is deleted.
+  **/
 QString FeedProfile::feedFileName() const {
     QString filename;
     filename.setNum( qHash(mSourceUrl.toString()) );
     filename.append(".xml");
-    return filename;
+    static QString path;
+    if(path.isEmpty()) {
+        QString basePath = RSSManager::storagePath();
+        if(!basePath.isEmpty()) {
+            QDir d(basePath);
+            if(!d.cd(TMP_DIR)) {
+                if(!d.mkdir(TMP_DIR)) {
+                    qWarning()<<Q_FUNC_INFO<<"Unable to create tmp folder at "+basePath;
+                    path.clear();
+                    return QString();
+                } else {
+                    d.cd(TMP_DIR);
+                }
+            }
+            path = d.absolutePath();
+        }
+    }
+    return path+"/"+filename;
 }
 
+/*!
+  Returns count of items in the feed.
+  **/
 int FeedProfile::count() const {
     // TODO: do caching and return result
     if(mCacheInvalidated || -1 == mCachedCount) {
@@ -247,6 +284,7 @@ void FeedProfile::setNetworkRequestActive(bool value) {
 bool FeedProfile::isNetworkRequestActive() {
     return mNetworkRequestActive;
 }
+
 
 
 // eof

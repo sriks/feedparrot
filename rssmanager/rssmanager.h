@@ -15,6 +15,8 @@ class RSSManager : public QObject
     Q_OBJECT
 public:
     explicit RSSManager(QObject *parent = 0);
+    static RSSManager* instance();
+    static QString storagePath();
     ~RSSManager();
 
 public slots:
@@ -39,6 +41,11 @@ public slots:
     void update(QUrl url);
     void setUpdateOnNewItemsOnly(QUrl url, bool val);
     bool isUpdatingOnNewItemsOnly(QUrl url) const;
+
+    bool saveState();
+    bool restoreState();
+    bool clearState();
+    void fetchUpdates();
 
 signals:
     /*!
