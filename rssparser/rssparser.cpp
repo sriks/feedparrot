@@ -4,6 +4,7 @@
 #include <QMetaObject>
 #include <QDebug>
 #include <QXmlItem>
+#include <QBuffer>
 #include "rssparser.h"
 
 // TODO: add method to query if an element exists
@@ -122,6 +123,8 @@ RSSParser::RSSParser(QObject *parent) :
     QObject(parent) {
     m_xmlSource = NULL;
     m_IsError = false;
+    m_Count = 0;
+    m_InvalidateCachedCount = true;
 }
 
 RSSParser::~RSSParser() {}
@@ -149,21 +152,22 @@ bool RSSParser::isValid() const {
 void RSSParser::setSource(QIODevice* xmlSource) {
       m_xmlSource = xmlSource;
       m_xmlQuery.bindVariable(KXmlSource,xmlSource);
+      m_InvalidateCachedCount = true;
 }
 
 QIODevice *RSSParser::source() const {
     return m_xmlSource;
 }
 
-/*! \brief Experimental API to set a filename as source. */
-bool RSSParser::setSourceFileName(QString sourceFileName) {
-    if(sourceFileName.isEmpty())
-    {return false;}
-    m_xmlSourceFileName = sourceFileName;
-    m_xmlQuery.bindVariable(KXmlSource,QXmlItem(QVariant(m_xmlSourceFileName)));
-    m_xmlSource = NULL;
-    return true;
-}
+///*! \brief Experimental API to set a filename as source. */
+//bool RSSParser::setSourceFileName(QString sourceFileName) {
+//    if(sourceFileName.isEmpty())
+//    {return false;}
+//    m_xmlSourceFileName = sourceFileName;
+//    m_xmlQuery.bindVariable(KXmlSource,QXmlItem(QVariant(m_xmlSourceFileName)));
+//    m_xmlSource = NULL;
+//    return true;
+//}
 
 /*! \brief returns URL of channel image  */
 QUrl RSSParser::imageUrl() {
@@ -263,7 +267,11 @@ QList<QStringList> RSSParser::categories() {
     \sa isError()
 */
 int RSSParser::count() {
-    return executeQuery(KXqItemCount).toInt();
+    if(m_InvalidateCachedCount) {
+        m_Count = executeQuery(KXqItemCount).toInt();
+        m_InvalidateCachedCount = false;
+    }
+    return m_Count;
 }
 
 /*! \brief returns true if the latest query resulted in error.*/

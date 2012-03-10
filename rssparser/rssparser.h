@@ -39,7 +39,6 @@ public slots:
     Q_INVOKABLE bool isValid() const;
     Q_INVOKABLE void setSource(QIODevice* xmlSource);
     Q_INVOKABLE QIODevice* source() const;
-    Q_INVOKABLE bool setSourceFileName(QString sourceFileName);
     Q_INVOKABLE QUrl imageUrl();
     Q_INVOKABLE QString channelElement(RSSElement aElement);
     Q_INVOKABLE QString channelElement(QString userElement);
@@ -63,6 +62,8 @@ private:
     QIODevice* m_xmlSource;
     QString m_xmlSourceFileName;
     bool m_IsError;
+    int m_Count;
+    int m_InvalidateCachedCount;
 };
 
 #endif // RSSPARSER_H
