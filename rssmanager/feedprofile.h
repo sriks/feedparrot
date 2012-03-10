@@ -16,7 +16,7 @@ class FeedProfile : public QObject
 {
     Q_OBJECT
 public:
-    explicit FeedProfile(QUrl url,int interval,QObject *parent = 0);
+    explicit FeedProfile(QUrl url,int interval,RSSManager* mgr,QObject *parent = 0);
     ~FeedProfile();
     bool isValid() const;
     void update();
@@ -40,6 +40,8 @@ public slots:
     bool isActive() const;
     QString latestItemTitle() const;
     void setLatestItemTitle(QString title);
+    void setUserData(FeedUserData userData);
+    FeedUserData userData() const;
 
 private slots:
     void handleTimeOut();
@@ -56,11 +58,13 @@ private:
 private:
     QUrl mSourceUrl;
     int mInterval;
+    RSSManager* mRSSManager;// non-owning
     QString mLatestElementTitle;
     QString mFeedFileName;
     QTimer mTimer;
     QNetworkAccessManager* mNetworkManager;
     QNetworkReply* mNetworkReply;
+    FeedUserData mUserData;
     mutable RSSParser* mParser;
     mutable int mCachedCount;
     mutable bool mCacheInvalidated;

@@ -6,6 +6,7 @@
 #include <QHash>
 #include "rssparser.h"
 
+typedef QMap<QString,QString> FeedUserData;
 
 // Forward declaration
 class FeedProfile;
@@ -14,9 +15,9 @@ class RSSManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit RSSManager(QObject *parent = 0);
-    static RSSManager* instance();
-    static QString storagePath();
+    explicit RSSManager(QString applicationName,QObject *parent = 0);
+    static RSSManager* instance(QString applicationName);
+    QString storagePath();
     ~RSSManager();
 
 public slots:
@@ -47,6 +48,10 @@ public slots:
     bool clearState();
     void fetchUpdates();
 
+    QString applicationName() const;
+    void setUserData(QUrl url,FeedUserData userData);
+    FeedUserData userData(QUrl url) const;
+    QMap< QUrl,FeedUserData > userData() const;
 signals:
     /*!
       \brief Signal is emitted when new feed content is available

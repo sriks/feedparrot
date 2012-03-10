@@ -19,10 +19,11 @@ const QString TMP_DIR("tmp");
 
 QMutex mutex;
 
-FeedProfile::FeedProfile(QUrl url,int interval,QObject *parent) :
+FeedProfile::FeedProfile(QUrl url,int interval,RSSManager* mgr,QObject *parent) :
     QObject(parent),
     mSourceUrl(url),
     mInterval(interval),
+    mRSSManager(mgr),
     mNetworkManager(NULL),
     mNetworkReply(NULL),
     mParser(NULL),
@@ -113,6 +114,14 @@ void FeedProfile::setLatestItemTitle(QString title) {
     mLatestElementTitle = title;
 }
 
+void FeedProfile::setUserData(FeedUserData userData) {
+    mUserData = userData;
+}
+
+FeedUserData FeedProfile::userData() const {
+    return mUserData;
+}
+
 void FeedProfile::handleTimeOut() {
     // ignore
     if(isNetworkRequestActive())
@@ -153,6 +162,9 @@ void FeedProfile::replyFinished(QNetworkReply *reply) {
 void FeedProfile::handleContent(QByteArray content) {
     if(content.size()) {
             QFile feedFile(feedFileName());
+            // TODO: continue by just passing the content when feedFileName is empty
+            // This is required by libs which use feedparrot to get data.
+            // In such cases they cannot provide any application name.
 
             if(feedFile.exists())
                 feedFile.remove();
@@ -173,7 +185,7 @@ void FeedProfile::handleContent(QByteArray content) {
             parser->setSource(&readFeedFile);
             QStringList titles = parser->itemElements(RSSParser::title);
             bool perr = parser->isError();
-            parser->deleteLater();
+            delete parser;
             readFeedFile.close();
 
             if(perr) {
@@ -218,7 +230,7 @@ QString FeedProfile::feedFileName() const {
     filename.append(".xml");
     static QString path;
     if(path.isEmpty()) {
-        QString basePath = RSSManager::storagePath();
+        QString basePath = mRSSManager->storagePath();
         if(!basePath.isEmpty()) {
             QDir d(basePath);
             if(!d.cd(TMP_DIR)) {

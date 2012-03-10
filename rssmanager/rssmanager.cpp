@@ -13,9 +13,13 @@ QString DATA_LOCATION = "/home/user/.local/share//data/";
 
 class RSSManagerPrivate {
 public:
+    QString appName;
     QMap<QUrl,FeedProfile*> profiles;
     FeedProfile* profile(QUrl url) const {
         return profiles.value(url,NULL);
+    }
+    ~RSSManagerPrivate() {
+        qDeleteAll(profiles.begin(),profiles.end());
     }
 };
 
@@ -25,29 +29,33 @@ const QString KFeedItem("item");
 const QString KFeedStorageurl("link");
 const QString KFeedStorageUpdatePeriod("updateperiod");
 const QString KFeedStorageLatestItemTitle("title");
+const QString KFeedStorageUserDataItemTitle("userdata");
+const QString KFeedStorageCountItemTitle("count");
+const QString KFeedStorageKeyItemTitle("key");
+const QString KFeedStorageValueItemTitle("value");
 
 const QString KOrganisationName("decii");
 const QString KAppName("rssmanager");
 const QString KFeedGroup("feeds");
 const QString KFeedList("feedlist");
 
-RSSManager::RSSManager(QObject *parent) :
+RSSManager::RSSManager(QString applicationName,QObject *parent) :
     QObject(parent) {
     d = new RSSManagerPrivate;
+    d->appName = applicationName;
     restoreState();
 }
 
 /*!
   Creates an instance of RSSManager.
-  This instance is parented to QCoreApplication for convinience, but it can be reparented to suit your need.
+  Onwership is transferred to the caller.
   If RSSManager is created using new, calling instance() will return a new instance rather than the instance created with new.
-  Hence use instance and new in a mutually exclusive manner.
-
+  Hence use instance() and new() in a mutually exclusive manner.
   **/
-RSSManager *RSSManager::instance() {
+RSSManager *RSSManager::instance(QString applicationName) {
     static RSSManager* m = NULL;
     if(!m)
-        m = new RSSManager(QCoreApplication::instance());
+        m = new RSSManager(applicationName);
     return m;
 }
 
@@ -56,9 +64,9 @@ RSSManager *RSSManager::instance() {
   Clients need to remove this path when uninstalling in platforms like Harmattan.
 
      basePath is <storagepath>/<appname>/tmp
-     Storage path in for different platforms...
+     Storage path for different platforms...
         1.Symbian is <privatefolder>
-        2.Harmattan is /home/user/.local/share//data/
+        2.Harmattan is /home/user/.local/share//data/<appname>
         3.Others same as QCoreApplication::applicationDirPath()
 
         For example in harmattan if the application name is "TechNews" then storagePath would return
@@ -73,9 +81,9 @@ QString RSSManager::storagePath() {
         basePath = QCoreApplication::applicationDirPath();
         #endif
 
-        QString appname = QCoreApplication::applicationName();
+        QString appname = applicationName();
         if(appname.isEmpty()) {
-            qWarning()<<"Required to speicfy appname using QApplication::setApplicationName().";
+            qWarning()<<"Required to speicfy appname using RSSManager::setApplicationName().";
             basePath.clear();
             return QString();
         }
@@ -97,6 +105,7 @@ QString RSSManager::storagePath() {
 
 RSSManager::~RSSManager() {
     // write all preferences
+    qDebug()<<Q_FUNC_INFO;
     saveState();
     delete d;
 }
@@ -118,6 +127,7 @@ bool RSSManager::saveState() {
         xmlWriter.writeStartElement(KFeedStorageFeedElement);
         QList<FeedProfile*>  profiles = d->profiles.values();
             for(int i=0;i<profiles.count();i++) {
+                FeedProfile* profile = profiles.at(i);
                 xmlWriter.writeStartElement(KFeedItem);
                 xmlWriter.writeTextElement(KFeedStorageurl,
                                            profiles.at(i)->url().toString());
@@ -125,6 +135,23 @@ bool RSSManager::saveState() {
                                            QString().setNum(profiles.at(i)->interval()));
                 xmlWriter.writeTextElement(KFeedStorageLatestItemTitle,
                                            profiles.at(i)->latestItemTitle());
+
+                // user data
+                if(!profile->userData().isEmpty()) {
+                    FeedUserData userdata(profile->userData());
+                    QMapIterator<QString,QString> iter(userdata);
+                    xmlWriter.writeStartElement(KFeedStorageUserDataItemTitle);
+                    xmlWriter.writeTextElement(KFeedStorageCountItemTitle,
+                                               QString().setNum(userdata.size()));
+                    while(iter.hasNext()) {
+                        iter.next();
+                        xmlWriter.writeTextElement(KFeedStorageKeyItemTitle,
+                                                   iter.key());
+                        xmlWriter.writeTextElement(KFeedStorageValueItemTitle,
+                                                   iter.value());
+                    }
+                    xmlWriter.writeEndElement();
+                }
                 xmlWriter.writeEndElement();
             }
         xmlWriter.writeEndDocument();
@@ -155,11 +182,28 @@ bool RSSManager::restoreState() {
             QUrl url(p->itemElement(i,KFeedStorageurl).trimmed());
             QString title = p->itemElement(i,KFeedStorageLatestItemTitle).trimmed();
             QString invStr = p->itemElement(i,KFeedStorageUpdatePeriod).trimmed();
-            add(url,invStr.toInt()); // TODO: check base when converting str to int
+            add(url,invStr.toInt()); // TODO: check base when converting str to interval
             FeedProfile* fp = d->profile(url);
-            if(fp)
+            if(fp) {
                 fp->setLatestItemTitle(title);
+                // setting user data
+                int c = p->itemElement(i,KFeedStorageUserDataItemTitle+"/"+
+                                         KFeedStorageCountItemTitle).trimmed().toInt();
+                FeedUserData userdata;
+                const QString keyValueIndexStr(KFeedStorageUserDataItemTitle+"/"+"%2"+"[%3]");
+                for(int j=0;j<c;++j) {
+                    QString queryForKey = keyValueIndexStr.arg(KFeedStorageKeyItemTitle,QString().setNum(j+1)); // xquery index starts with 1
+                    QString key = p->itemElement(i,queryForKey).trimmed();
+                    if(!key.isEmpty()) {
+                        QString queryForvalue = keyValueIndexStr.arg(KFeedStorageValueItemTitle,QString().setNum(j+1));
+                        QString value = p->itemElement(i,queryForvalue).trimmed();
+                        userdata.insert(key,value);
+                        fp->setUserData(userdata);
+                    }
+                }
+            }
         }
+        delete p;
     }
     return true;
 }
@@ -180,6 +224,37 @@ bool RSSManager::clearState() {
 void RSSManager::fetchUpdates() {
     restoreState();
     updateAll();
+}
+
+/*!
+  Returns application name set during construction.
+  **/
+QString RSSManager::applicationName() const {
+    return d->appName;
+}
+
+void RSSManager::setUserData(QUrl url, FeedUserData userData) {
+    FeedProfile* p = d->profile(url);
+    if(p && !userData.isEmpty())
+        p->setUserData(userData);
+}
+
+FeedUserData RSSManager::userData(QUrl url) const {
+    FeedUserData userdata;
+    FeedProfile* p = d->profile(url);
+    if(p)
+        userdata = p->userData();
+    return userdata;
+}
+
+QMap< QUrl, FeedUserData > RSSManager::userData() const {
+    QMap< QUrl, FeedUserData > userdatamap;
+    QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+    while(iter.hasNext()) {
+        iter.next();
+        userdatamap.insert(iter.key(),userData(iter.key()));
+    }
+    return userdatamap;
 }
 
 /*!
@@ -229,7 +304,7 @@ bool RSSManager::remove(QUrl url)
     bool result = false;
     if(contains(url)) {
         d->profiles.value(url)->stop();
-        d->profiles.take(url)->deleteLater();
+        delete d->profiles.take(url);
     }
 return result;
 }
