@@ -11,10 +11,13 @@
 QString DATA_LOCATION = "/home/user/.local/share//data/";
 #endif
 
+typedef QHash<QUrl,FeedProfile*> FeedContainer;
+typedef QHashIterator<QUrl,FeedProfile*> FeedsIterator;
+
 class RSSManagerPrivate {
 public:
     QString appName;
-    QMap<QUrl,FeedProfile*> profiles;
+    FeedContainer profiles;
     FeedProfile* profile(QUrl url) const {
         return profiles.value(url,NULL);
     }
@@ -28,7 +31,7 @@ const QString KFeedStorageFeedElement("feedstore");
 const QString KFeedItem("item");
 const QString KFeedStorageurl("link");
 const QString KFeedStorageUpdatePeriod("updateperiod");
-const QString KFeedStorageLatestItemTitle("title");
+const QString KFeedStorageLatestItemCheckpoint("checkpoint");
 const QString KFeedStorageUserDataItemTitle("userdata");
 const QString KFeedStorageCountItemTitle("count");
 const QString KFeedStorageKeyItemTitle("key");
@@ -133,8 +136,8 @@ bool RSSManager::saveState() {
                                            profiles.at(i)->url().toString());
                 xmlWriter.writeTextElement(KFeedStorageUpdatePeriod,
                                            QString().setNum(profiles.at(i)->interval()));
-                xmlWriter.writeTextElement(KFeedStorageLatestItemTitle,
-                                           profiles.at(i)->latestItemTitle());
+                xmlWriter.writeTextElement(KFeedStorageLatestItemCheckpoint,
+                                           profiles.at(i)->latestItemCheck());
 
                 // user data
                 if(!profile->userData().isEmpty()) {
@@ -180,12 +183,12 @@ bool RSSManager::restoreState() {
         int c = p->count();
         for(int i=0;i<c;++i) {
             QUrl url(p->itemElement(i,KFeedStorageurl).trimmed());
-            QString title = p->itemElement(i,KFeedStorageLatestItemTitle).trimmed();
+            QString check = p->itemElement(i,KFeedStorageLatestItemCheckpoint).trimmed();
             QString invStr = p->itemElement(i,KFeedStorageUpdatePeriod).trimmed();
             add(url,invStr.toInt()); // TODO: check base when converting str to interval
             FeedProfile* fp = d->profile(url);
             if(fp) {
-                fp->setLatestItemTitle(title);
+                fp->setLatestItemCheck(check);
                 // setting user data
                 int c = p->itemElement(i,KFeedStorageUserDataItemTitle+"/"+
                                          KFeedStorageCountItemTitle).trimmed().toInt();
@@ -249,12 +252,43 @@ FeedUserData RSSManager::userData(QUrl url) const {
 
 QMap< QUrl, FeedUserData > RSSManager::userData() const {
     QMap< QUrl, FeedUserData > userdatamap;
-    QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+    FeedsIterator iter(d->profiles);
     while(iter.hasNext()) {
         iter.next();
         userdatamap.insert(iter.key(),userData(iter.key()));
     }
     return userdatamap;
+}
+
+/*!
+  Returns the checkpoint that rssmanager tags so that feeds after this checkpoint
+  are treated as new items.
+  This checkpoint can be any element in an item.
+  \a url Url identifying a feed.
+  **/
+QString RSSManager::checkpoint(QUrl url) const {
+    QString cp;
+    FeedProfile* fp = d->profile(url);
+    if(fp)
+        cp = fp->latestItemCheck();
+    return cp;
+}
+
+/*!
+  Forgets the last saved checkpoint for the feed identified by \a url
+  This is same as calling setCheckpoint(url,QString())
+  **/
+void RSSManager::forgetCheckpoint(QUrl url) const {
+    setCheckpoint(url,QString());
+}
+
+/*!
+  Sets checkpoint to \a newCheckpoint on the feed identified by \a url
+  **/
+void RSSManager::setCheckpoint(QUrl url,QString newCheckpoint) const {
+    FeedProfile* fp = d->profile(url);
+    if(fp)
+        fp->setLatestItemCheck(newCheckpoint);
 }
 
 /*!
@@ -266,7 +300,7 @@ QMap< QUrl, FeedUserData > RSSManager::userData() const {
   **/
 bool RSSManager::add(QUrl url, int msec) {
     bool res = false;
-    if(!contains(url) && !url.isEmpty()) {
+    if(!d->profile(url)) {
         FeedProfile* profile = new FeedProfile(url,msec,this);
         connect(profile,SIGNAL(updateAvailable(QUrl,int)),this,SIGNAL(updateAvailable(QUrl,int)),Qt::UniqueConnection);
         connect(profile,SIGNAL(error(QString,QUrl)),this,SIGNAL(error(QString,QUrl)),Qt::UniqueConnection);
@@ -311,7 +345,7 @@ return result;
 
 void RSSManager::removeAll() {
     if(!d->profiles.isEmpty()) {
-        QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+        FeedsIterator iter(d->profiles);
         while(iter.hasNext())
             remove(iter.next().key());
     }
@@ -352,7 +386,7 @@ int RSSManager::count() const {
 \sa update(QUrl)
 */
 void RSSManager::updateAll() {
-    QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+    FeedsIterator iter(d->profiles);
     while(iter.hasNext())
         update(iter.next().key());
 }
@@ -398,18 +432,27 @@ bool RSSManager::isUpdatingOnNewItemsOnly(QUrl url) const {
 \brief Provides a parser initialized and ready to parse results from url.
 \attention Ownership is transfered to the client. Client should call deleteLater() when finished with parsing.
 \arg url URL for which the results should be parsed.
-\return returns initialized ready to use RSSParser. Returns 0 for inivaid url.
+\return Returns initialized ready to use RSSParser. Returns NULL for inivaid url.
 */
 RSSParser* RSSManager::parser(QUrl url) {
     RSSParser* parser = NULL;
     FeedProfile* p = d->profile(url);
     if(p) {
+        // TODO: rather than creating an instance,
+        // just hook a parser for each feedprofile.
         parser = new RSSParser(this);
         QFile* src = new QFile(p->feedFileName());
+        src->setParent(parser);
         src->open(QIODevice::ReadOnly);
         parser->setSource(src);
     }
     return parser;
+
+//    RSSParser* parser = NULL;
+//    FeedProfile* p = d->profile(url);
+//    if(p)
+//        parser = p->parser();
+//    return parser;
 }
 
 /*!
@@ -431,7 +474,7 @@ void RSSManager::stop(QUrl url) {
 */
 void RSSManager::stopAll() {
     if(!d->profiles.isEmpty()) {
-        QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+        FeedsIterator iter(d->profiles);
         while(iter.hasNext()) {
             FeedProfile* f = iter.next().value();
             f->stop();
@@ -463,7 +506,7 @@ bool RSSManager::start(QUrl url) {
 */
 void RSSManager::startAll() {
     if(!d->profiles.isEmpty()) {
-        QMapIterator<QUrl,FeedProfile*> iter(d->profiles);
+        FeedsIterator iter(d->profiles);
         while(iter.hasNext())
             start(iter.next().key());
     }

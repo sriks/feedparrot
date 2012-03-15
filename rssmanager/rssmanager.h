@@ -52,6 +52,11 @@ public slots:
     void setUserData(QUrl url,FeedUserData userData);
     FeedUserData userData(QUrl url) const;
     QMap< QUrl,FeedUserData > userData() const;
+
+    // Checkpoint
+    QString checkpoint(QUrl url) const;
+    void forgetCheckpoint(QUrl url) const;
+    void setCheckpoint(QUrl url,QString newCheckpoint) const;
 signals:
     /*!
       \brief Signal is emitted when new feed content is available

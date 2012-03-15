@@ -1,9 +1,7 @@
-#include <QTimer>
 #include <QHash>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QBuffer>
-#include <QFile>
 #include <QDebug>
 #include <QMutex>
 #include <QMutexLocker>
@@ -26,7 +24,6 @@ FeedProfile::FeedProfile(QUrl url,int interval,RSSManager* mgr,QObject *parent) 
     mRSSManager(mgr),
     mNetworkManager(NULL),
     mNetworkReply(NULL),
-    mParser(NULL),
     mCacheInvalidated(true),
     mCachedCount(-1),
     mFeedReachable(false),
@@ -36,7 +33,6 @@ FeedProfile::FeedProfile(QUrl url,int interval,RSSManager* mgr,QObject *parent) 
     QNetworkProxyFactory::setUseSystemConfiguration(true);
 #endif
     setNetworkRequestActive(false);
-    mParser = new RSSParser(this);
     mNetManCreatedCount = 0; // test only
     connect(&mTimer,SIGNAL(timeout()),this,SLOT(handleTimeOut()));
 }
@@ -55,18 +51,19 @@ bool FeedProfile::isValid() const {
     return mSourceUrl.isValid() && mFeedReachable;
 }
 
-RSSParser* FeedProfile::parser() const {
-    if(!mParser->source()) {
-        // Each profile acts on a singel xmlsource,
-        // so setting it once for ever.
-        // TODO: test this with quick update intervals.
-        QFile* src = new QFile(feedFileName(),mParser);
-        if(src->open(QIODevice::ReadOnly))
-            mParser->setSource(src);
-    }
-    // TODO: should we reset read head to beginning of the file?
-    return mParser;
-}
+// Fix the crash when parser is deleted.
+//RSSParser* FeedProfile::parser() const {
+//    if(mParser && !mParser->source()) {
+//        // Each profile acts on a singel xmlsource,
+//        // so setting it once for ever.
+//        // TODO: test this with quick update intervals.
+//        QFile* src = new QFile(feedFileName(),mParser);
+//        if(src->open(QIODevice::ReadOnly))
+//            mParser->setSource(src);
+//    }
+//    // TODO: should we reset read head to beginning of the file?
+//    return mParser;
+//}
 
 /*!
   Updates the feed irresptive of interval. If start() is called prior to this method it will not effect the interval.
@@ -106,12 +103,12 @@ bool FeedProfile::isActive() const {
     return mTimer.isActive();
 }
 
-QString FeedProfile::latestItemTitle() const {
-    return mLatestElementTitle;
+QString FeedProfile::latestItemCheck() const {
+    return mLatestElementCheck;
 }
 
-void FeedProfile::setLatestItemTitle(QString title) {
-    mLatestElementTitle = title;
+void FeedProfile::setLatestItemCheck(QString check) {
+    mLatestElementCheck = check;
 }
 
 void FeedProfile::setUserData(FeedUserData userData) {
@@ -183,7 +180,7 @@ void FeedProfile::handleContent(QByteArray content) {
             readFeedFile.open(QIODevice::ReadOnly);
             RSSParser* parser = new RSSParser(this);
             parser->setSource(&readFeedFile);
-            QStringList titles = parser->itemElements(RSSParser::title);
+            QStringList checks = parser->itemElements(RSSParser::link);
             bool perr = parser->isError();
             delete parser;
             readFeedFile.close();
@@ -193,18 +190,16 @@ void FeedProfile::handleContent(QByteArray content) {
                 return;
             }
 
-            int totalItems = titles.count();
+            int totalItems = checks.count();
             if(totalItems) {
                 mFeedReachable = true;
 
                 // Assume all items are new
                 newItemsCount = totalItems;
-
                 // Check for updates
-                if(!mLatestElementTitle.isEmpty() && (titles.indexOf(mLatestElementTitle) >= 0))
-                    newItemsCount = titles.indexOf(mLatestElementTitle);
-
-                mLatestElementTitle = titles.at(0);
+                if(!mLatestElementCheck.isEmpty() && checks.contains(mLatestElementCheck))
+                    newItemsCount = checks.indexOf(mLatestElementCheck);
+                mLatestElementCheck = checks.at(0);
                 // New updates available
                 // emit this signal even if there is no active timer.
                 // some clients may need update on demand.
@@ -248,17 +243,25 @@ QString FeedProfile::feedFileName() const {
     return path+"/"+filename;
 }
 
+//QIODevice FeedProfile::fileHandle() {
+//    if(!mFile.isOpen()) {
+//        mFile.setFileName(feedFileName());
+//        mFile.open(QIODevice::ReadOnly);
+//    }
+//return mFile;
+//}
+
 /*!
   Returns count of items in the feed.
   **/
-int FeedProfile::count() const {
-    // TODO: do caching and return result
-    if(mCacheInvalidated || -1 == mCachedCount) {
-        mCachedCount = parser()->count();
-        mCacheInvalidated = false;
-    }
-    return mCachedCount;
-}
+//int FeedProfile::count() const {
+//    // TODO: do caching and return result
+//    if(mCacheInvalidated || -1 == mCachedCount) {
+//        mCachedCount = parser()->count();
+//        mCacheInvalidated = false;
+//    }
+//    return mCachedCount;
+//}
 
 QUrl FeedProfile::url() const {
     return mSourceUrl;

@@ -274,6 +274,14 @@ int RSSParser::count() {
     return m_Count;
 }
 
+/*!
+  Invalidates any cached results.
+  Use this method if the supplied source is updated without using setSource()
+  **/
+void RSSParser::invalidateCache() {
+    m_InvalidateCachedCount = true;
+}
+
 /*! \brief returns true if the latest query resulted in error.*/
 bool RSSParser::isError() const {
     return m_IsError;
@@ -287,11 +295,12 @@ QString RSSParser::executeQuery(const QString& aQuery) {
 
     if(m_xmlQuery.isValid()) {
        m_xmlQuery.evaluateTo(&result);
+       result = decodeHtml(result);
     } else {
         m_IsError = true;
         qWarning()<<__FUNCTION__<<" invalid query \n"<<aQuery;
     }
-    return result;
+    return result.simplified();
 }
 
 // Internal API

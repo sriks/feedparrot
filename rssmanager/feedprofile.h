@@ -2,7 +2,6 @@
 #define FEEDPROFILE_H
 #include <QObject>
 #include <QTimer>
-#include <QPointer>
 #include "rssmanager.h"
 
 class QNetworkAccessManager;
@@ -21,7 +20,7 @@ public:
     bool isValid() const;
     void update();
     QString feedFileName() const;
-    int count() const;
+    //int count() const;
     QUrl url() const;
     int interval() const;
     void setSmartUpdate(bool val);
@@ -38,8 +37,8 @@ public slots:
     /** \param value less than zero stops the timer and all updates
      **/
     bool isActive() const;
-    QString latestItemTitle() const;
-    void setLatestItemTitle(QString title);
+    QString latestItemCheck() const;
+    void setLatestItemCheck(QString check);
     void setUserData(FeedUserData userData);
     FeedUserData userData() const;
 
@@ -53,19 +52,17 @@ private slots:
 private:
     void setNetworkRequestActive(bool value);
     bool isNetworkRequestActive();
-    RSSParser* parser() const;
 
 private:
-    QUrl mSourceUrl;
+    const QUrl mSourceUrl;
     int mInterval;
     RSSManager* mRSSManager;// non-owning
-    QString mLatestElementTitle;
+    QString mLatestElementCheck;
     QString mFeedFileName;
     QTimer mTimer;
     QNetworkAccessManager* mNetworkManager;
     QNetworkReply* mNetworkReply;
     FeedUserData mUserData;
-    mutable RSSParser* mParser;
     mutable int mCachedCount;
     mutable bool mCacheInvalidated;
     // Dont use this directly, use setter and getter instead

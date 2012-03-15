@@ -49,6 +49,7 @@ public slots:
     Q_INVOKABLE QStringList category(int itemIndex);
     Q_INVOKABLE QList<QStringList> categories();
     Q_INVOKABLE int count();
+    void invalidateCache();
     bool isError() const;
     static QString decodeHtml(const QString& encodedHtml);
 
