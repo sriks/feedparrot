@@ -131,7 +131,8 @@ void FeedProfile::handleTimeOut() {
             this, SLOT(replyFinished(QNetworkReply*)),Qt::UniqueConnection);
     connect(mNetworkManager,SIGNAL(destroyed(QObject*)),
             this,SLOT(handleNetworkMgrDestroyed(QObject*)),Qt::UniqueConnection);
-    mNetworkReply = mNetworkManager->get(QNetworkRequest(mSourceUrl));
+    QUrl url(mSourceUrl.toString(),QUrl::TolerantMode);
+    mNetworkReply = mNetworkManager->get(QNetworkRequest(/*mSourceUrl*/url));
     setNetworkRequestActive(true);
 }
 
