@@ -1,4 +1,4 @@
-feedmanager api
+ feedmanager api
 
 // This will fetch elements mentioned in intrestedElements among the updatedElements 
 // returns list of updatedElements with a stringlist of strings for intrestedelements
