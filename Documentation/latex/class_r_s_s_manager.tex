@@ -1,0 +1,498 @@
+\hypertarget{class_r_s_s_manager}{\section{R\-S\-S\-Manager Class Reference}
+\label{class_r_s_s_manager}\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}}
+}
+\subsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+bool \hyperlink{class_r_s_s_manager_a1af8b572aadfe48f819a4322b242359c}{add} (Q\-Url url, int msec=3600000)
+\item 
+bool \hyperlink{class_r_s_s_manager_abe9ccbb2b3df692cf6bc9c781058680e}{remove} (Q\-Url url)
+\begin{DoxyCompactList}\small\item\em Removes feed permanently. Stops update cycle of this feed If feed is fetched and being processed, update\-Available signal is emitted. \end{DoxyCompactList}\item 
+\hypertarget{class_r_s_s_manager_a14d3f31de276b74e8c97c4eda0ecf68a}{void {\bfseries remove\-All} ()}\label{class_r_s_s_manager_a14d3f31de276b74e8c97c4eda0ecf68a}
+
+\item 
+bool \hyperlink{class_r_s_s_manager_a83e1e3050e280ca5018b0bd358b91857}{start} (Q\-Url url)
+\begin{DoxyCompactList}\small\item\em Starts update. Clients should call this method to start update cycle. Once called update cycle is started and feeds are fetched as per update interval. This has no effect if called on a feed which is already started or the interval is negative. \end{DoxyCompactList}\item 
+void \hyperlink{class_r_s_s_manager_a586bb2f3e73af2ac76a2bfcc73d5c0e5}{start\-All} ()
+\begin{DoxyCompactList}\small\item\em Convience method to start all feeds. \end{DoxyCompactList}\item 
+void \hyperlink{class_r_s_s_manager_a23a3fbde5eaab58f792087a7129f1840}{stop} (Q\-Url url)
+\begin{DoxyCompactList}\small\item\em Stops update for feed identified by {\itshape url\/}. \end{DoxyCompactList}\item 
+void \hyperlink{class_r_s_s_manager_a19aa6727d8b9925865a00f515c082c0d}{stop\-All} ()
+\begin{DoxyCompactList}\small\item\em Stops all feed updates. \end{DoxyCompactList}\item 
+\hypertarget{class_r_s_s_manager_a9906e8f0bf706d6176815e12d1dbe53e}{int {\bfseries count} () const }\label{class_r_s_s_manager_a9906e8f0bf706d6176815e12d1dbe53e}
+
+\item 
+\hypertarget{class_r_s_s_manager_ace1fc2397432c0c4662bdea73254d6e3}{bool {\bfseries contains} (Q\-Url url) const }\label{class_r_s_s_manager_ace1fc2397432c0c4662bdea73254d6e3}
+
+\item 
+Q\-List$<$ Q\-Url $>$ \hyperlink{class_r_s_s_manager_a2852ac2857292b9faaa3fb8a32ad8f9b}{urls} () const 
+\begin{DoxyCompactList}\small\item\em Returns all U\-R\-Ls of all feeds added so far. \end{DoxyCompactList}\item 
+Q\-String \hyperlink{class_r_s_s_manager_af0f068ca88b9ce7430ed879817325991}{feed\-File\-Name} (Q\-Url url) const 
+\item 
+\hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser} $\ast$ \hyperlink{class_r_s_s_manager_ad87bd1cf9ed4380d36b23341e115d19e}{parser} (Q\-Url url)
+\begin{DoxyCompactList}\small\item\em Provides a parser initialized and ready to parse results from url. \end{DoxyCompactList}\item 
+void \hyperlink{class_r_s_s_manager_a61585a5b8bec73b83a6c9e5ea990e7f8}{set\-Interval} (Q\-Url url, int msec)
+\begin{DoxyCompactList}\small\item\em Sets new update interval to {\itshape msec\/} to the feed identified by {\itshape url\/}. This restarts the feed with new interval {\itshape msec\/}. If a negative value is supplied, subscription is stopped. But prefer to use \hyperlink{class_r_s_s_manager_a23a3fbde5eaab58f792087a7129f1840}{stop()} which is more explicit. \end{DoxyCompactList}\item 
+void \hyperlink{class_r_s_s_manager_a54cc44949de7b572cdd01bebf7ea4f6c}{update\-All} ()
+\begin{DoxyCompactList}\small\item\em Updates all feeds which are added so far. Order of update is undefined. If such an order is required prefer to use \hyperlink{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}{update(\-Q\-Url)} \end{DoxyCompactList}\item 
+void \hyperlink{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}{update} (Q\-Url url)
+\item 
+void \hyperlink{class_r_s_s_manager_a207ba608696040d5d594fa67eae006bd}{set\-Update\-On\-New\-Items\-Only} (Q\-Url url, bool val)
+\item 
+bool \hyperlink{class_r_s_s_manager_a08dc3aa8812b5b22fea4bd64c71fa474}{is\-Updating\-On\-New\-Items\-Only} (Q\-Url url) const 
+\item 
+bool \hyperlink{class_r_s_s_manager_ab8ad38352998ee4b3d8e257f6a8d7700}{save\-State} ()
+\item 
+bool \hyperlink{class_r_s_s_manager_ac7471202ae912cc996eab19d047dbef5}{restore\-State} ()
+\item 
+bool \hyperlink{class_r_s_s_manager_af5b5bee03db89672564cfa53deb86851}{clear\-State} ()
+\item 
+void \hyperlink{class_r_s_s_manager_aec7c080390df20d8117ad66f47777cae}{fetch\-Updates} ()
+\item 
+Q\-String \hyperlink{class_r_s_s_manager_afe064ca0fb955f5a5a9874a7a4d273b1}{application\-Name} () const 
+\item 
+\hypertarget{class_r_s_s_manager_a02a09bc4d458e7bc74926647d71da421}{void {\bfseries set\-User\-Data} (Q\-Url url, Feed\-User\-Data user\-Data)}\label{class_r_s_s_manager_a02a09bc4d458e7bc74926647d71da421}
+
+\item 
+\hypertarget{class_r_s_s_manager_a3a9717c96941045888e9b421e49cf3c4}{Feed\-User\-Data {\bfseries user\-Data} (Q\-Url url) const }\label{class_r_s_s_manager_a3a9717c96941045888e9b421e49cf3c4}
+
+\item 
+\hypertarget{class_r_s_s_manager_ace43b66270dafdd9c1c54cba2a449bad}{Q\-Map$<$ Q\-Url, Feed\-User\-Data $>$ {\bfseries user\-Data} () const }\label{class_r_s_s_manager_ace43b66270dafdd9c1c54cba2a449bad}
+
+\item 
+Q\-String \hyperlink{class_r_s_s_manager_a3142e13c74b94efe76e95210a468283c}{checkpoint} (Q\-Url url) const 
+\item 
+void \hyperlink{class_r_s_s_manager_a633ad2e13e05855fe4b9be177807c337}{forget\-Checkpoint} (Q\-Url url) const 
+\item 
+void \hyperlink{class_r_s_s_manager_a5cbe9b09302da0fabed486f8bd76225b}{set\-Checkpoint} (Q\-Url url, Q\-String new\-Checkpoint) const 
+\end{DoxyCompactItemize}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_r_s_s_manager_a465f7c816a89f3e2d19c64a07b75ac5b}{update\-Available} (Q\-Url url, int new\-Items\-Count)
+\begin{DoxyCompactList}\small\item\em Signal is emitted when new feed content is available. \end{DoxyCompactList}\item 
+\hypertarget{class_r_s_s_manager_ad53613dd4020902baec988b79ec17eb2}{void {\bfseries error} (Q\-String error\-Description, Q\-Url url)}\label{class_r_s_s_manager_ad53613dd4020902baec988b79ec17eb2}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_r_s_s_manager_a6e38d3864a92ba3bb9989dacfb0a3f61}{{\bfseries R\-S\-S\-Manager} (Q\-String \hyperlink{class_r_s_s_manager_afe064ca0fb955f5a5a9874a7a4d273b1}{application\-Name}, Q\-Object $\ast$parent=0)}\label{class_r_s_s_manager_a6e38d3864a92ba3bb9989dacfb0a3f61}
+
+\item 
+Q\-String \hyperlink{class_r_s_s_manager_a6b15afc171af4ed4a51aa67f599edb40}{storage\-Path} ()
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{class_r_s_s_manager}{R\-S\-S\-Manager} $\ast$ \hyperlink{class_r_s_s_manager_a66085abae9b82a2292c162c76532b28d}{instance} (Q\-String \hyperlink{class_r_s_s_manager_afe064ca0fb955f5a5a9874a7a4d273b1}{application\-Name})
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 14 of file rssmanager.\-h.
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_r_s_s_manager_a1af8b572aadfe48f819a4322b242359c}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!add@{add}}
+\index{add@{add}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{add}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Manager\-::add} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url, }
+\item[{int}]{msec = {\ttfamily 3600000}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a1af8b572aadfe48f819a4322b242359c}
+Adds new feed {\itshape url\/} to manager with interval {\itshape msec\/}. If does nothing if {\itshape url\/} is already added. \begin{DoxyReturn}{Returns}
+returns true if added successfully. 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Since adding suplicate {\itshape url\/} is a N\-O\-O\-P, it will not restart the timer. To restart timer please use \hyperlink{class_r_s_s_manager_a61585a5b8bec73b83a6c9e5ea990e7f8}{set\-Interval(\-Q\-Url,int)} 
+\end{DoxyNote}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_abe9ccbb2b3df692cf6bc9c781058680e}{remove(\-Q\-Url)}, remove\-All() 
+\end{DoxySeeAlso}
+
+
+Definition at line 301 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_afe064ca0fb955f5a5a9874a7a4d273b1}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!application\-Name@{application\-Name}}
+\index{application\-Name@{application\-Name}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{application\-Name}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Manager\-::application\-Name} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_afe064ca0fb955f5a5a9874a7a4d273b1}
+Returns application name set during construction. 
+
+Definition at line 235 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a3142e13c74b94efe76e95210a468283c}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!checkpoint@{checkpoint}}
+\index{checkpoint@{checkpoint}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{checkpoint}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Manager\-::checkpoint} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a3142e13c74b94efe76e95210a468283c}
+Returns the checkpoint that rssmanager tags so that feeds after this checkpoint are treated as new items. This checkpoint can be any element in an item. {\itshape url\/} Url identifying a feed. 
+
+Definition at line 269 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_af5b5bee03db89672564cfa53deb86851}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!clear\-State@{clear\-State}}
+\index{clear\-State@{clear\-State}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{clear\-State}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Manager\-::clear\-State} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_af5b5bee03db89672564cfa53deb86851}
+Clears saved state. 
+
+Definition at line 217 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_af0f068ca88b9ce7430ed879817325991}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!feed\-File\-Name@{feed\-File\-Name}}
+\index{feed\-File\-Name@{feed\-File\-Name}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{feed\-File\-Name}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Manager\-::feed\-File\-Name} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_af0f068ca88b9ce7430ed879817325991}
+Returns the filename in which this feed is stored on disk. File name will always have an extension .xml. It is advised not to do in-\/place modifications on the file, instead copy it. 
+
+Definition at line 372 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_aec7c080390df20d8117ad66f47777cae}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!fetch\-Updates@{fetch\-Updates}}
+\index{fetch\-Updates@{fetch\-Updates}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{fetch\-Updates}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::fetch\-Updates} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_aec7c080390df20d8117ad66f47777cae}
+Fetches updates for feeds which were added in previous session. 
+
+Definition at line 227 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a633ad2e13e05855fe4b9be177807c337}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!forget\-Checkpoint@{forget\-Checkpoint}}
+\index{forget\-Checkpoint@{forget\-Checkpoint}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{forget\-Checkpoint}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::forget\-Checkpoint} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a633ad2e13e05855fe4b9be177807c337}
+Forgets the last saved checkpoint for the feed identified by {\itshape url\/} This is same as calling set\-Checkpoint(url,Q\-String()) 
+
+Definition at line 281 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a66085abae9b82a2292c162c76532b28d}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!instance@{instance}}
+\index{instance@{instance}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{instance}]{\setlength{\rightskip}{0pt plus 5cm}{\bf R\-S\-S\-Manager} $\ast$ {\bf R\-S\-S\-Manager\-::instance} (
+\begin{DoxyParamCaption}
+\item[{Q\-String}]{application\-Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static\mbox{]}}}}\label{class_r_s_s_manager_a66085abae9b82a2292c162c76532b28d}
+Creates an instance of \hyperlink{class_r_s_s_manager}{R\-S\-S\-Manager}. Onwership is transferred to the caller. If \hyperlink{class_r_s_s_manager}{R\-S\-S\-Manager} is created using new, calling \hyperlink{class_r_s_s_manager_a66085abae9b82a2292c162c76532b28d}{instance()} will return a new instance rather than the instance created with new. Hence use \hyperlink{class_r_s_s_manager_a66085abae9b82a2292c162c76532b28d}{instance()} and new() in a mutually exclusive manner. 
+
+Definition at line 58 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a08dc3aa8812b5b22fea4bd64c71fa474}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!is\-Updating\-On\-New\-Items\-Only@{is\-Updating\-On\-New\-Items\-Only}}
+\index{is\-Updating\-On\-New\-Items\-Only@{is\-Updating\-On\-New\-Items\-Only}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{is\-Updating\-On\-New\-Items\-Only}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Manager\-::is\-Updating\-On\-New\-Items\-Only} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a08dc3aa8812b5b22fea4bd64c71fa474}
+Returns whether {\itshape url\/} is updating on new items only. \begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a207ba608696040d5d594fa67eae006bd}{set\-Update\-On\-New\-Items\-Only(\-Q\-Url,bool)} 
+\end{DoxySeeAlso}
+
+
+Definition at line 423 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_ad87bd1cf9ed4380d36b23341e115d19e}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!parser@{parser}}
+\index{parser@{parser}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{parser}]{\setlength{\rightskip}{0pt plus 5cm}{\bf R\-S\-S\-Parser} $\ast$ {\bf R\-S\-S\-Manager\-::parser} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_ad87bd1cf9ed4380d36b23341e115d19e}
+
+
+Provides a parser initialized and ready to parse results from url. 
+
+\begin{DoxyAttention}{Attention}
+Ownership is transfered to the client. Client should call delete\-Later() when finished with parsing. \begin{DoxyItemize}
+\item url U\-R\-L for which the results should be parsed. \end{DoxyItemize}
+
+\end{DoxyAttention}
+\begin{DoxyReturn}{Returns}
+Returns initialized ready to use \hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser}. Returns N\-U\-L\-L for inivaid url. 
+\end{DoxyReturn}
+
+
+Definition at line 437 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_abe9ccbb2b3df692cf6bc9c781058680e}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!remove@{remove}}
+\index{remove@{remove}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{remove}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Manager\-::remove} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_abe9ccbb2b3df692cf6bc9c781058680e}
+
+
+Removes feed permanently. Stops update cycle of this feed If feed is fetched and being processed, update\-Available signal is emitted. 
+
+\begin{DoxyItemize}
+\item url Feed to be removed \begin{DoxyReturn}{Returns}
+true if sucessfully removed false if url is not yet added to \hyperlink{class_r_s_s_manager}{R\-S\-S\-Manager}. 
+\end{DoxyReturn}
+\end{DoxyItemize}
+
+
+Definition at line 336 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_ac7471202ae912cc996eab19d047dbef5}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!restore\-State@{restore\-State}}
+\index{restore\-State@{restore\-State}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{restore\-State}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Manager\-::restore\-State} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_ac7471202ae912cc996eab19d047dbef5}
+Reloads from saved state 
+
+Definition at line 174 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_ab8ad38352998ee4b3d8e257f6a8d7700}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!save\-State@{save\-State}}
+\index{save\-State@{save\-State}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{save\-State}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Manager\-::save\-State} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_ab8ad38352998ee4b3d8e257f6a8d7700}
+Saves state to local storage 
+
+Definition at line 119 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a5cbe9b09302da0fabed486f8bd76225b}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!set\-Checkpoint@{set\-Checkpoint}}
+\index{set\-Checkpoint@{set\-Checkpoint}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{set\-Checkpoint}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::set\-Checkpoint} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url, }
+\item[{Q\-String}]{new\-Checkpoint}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a5cbe9b09302da0fabed486f8bd76225b}
+Sets checkpoint to {\itshape new\-Checkpoint\/} on the feed identified by {\itshape url\/} 
+
+Definition at line 288 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a61585a5b8bec73b83a6c9e5ea990e7f8}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!set\-Interval@{set\-Interval}}
+\index{set\-Interval@{set\-Interval}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{set\-Interval}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::set\-Interval} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url, }
+\item[{int}]{msec}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a61585a5b8bec73b83a6c9e5ea990e7f8}
+
+
+Sets new update interval to {\itshape msec\/} to the feed identified by {\itshape url\/}. This restarts the feed with new interval {\itshape msec\/}. If a negative value is supplied, subscription is stopped. But prefer to use \hyperlink{class_r_s_s_manager_a23a3fbde5eaab58f792087a7129f1840}{stop()} which is more explicit. 
+
+\begin{DoxyReturn}{Returns}
+returns false if supplied url is invalid or not added yet. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}{update()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 321 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a207ba608696040d5d594fa67eae006bd}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!set\-Update\-On\-New\-Items\-Only@{set\-Update\-On\-New\-Items\-Only}}
+\index{set\-Update\-On\-New\-Items\-Only@{set\-Update\-On\-New\-Items\-Only}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{set\-Update\-On\-New\-Items\-Only}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::set\-Update\-On\-New\-Items\-Only} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url, }
+\item[{bool}]{val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a207ba608696040d5d594fa67eae006bd}
+Sets smart update to {\itshape val\/}. If this is set to true, \hyperlink{class_r_s_s_manager_a465f7c816a89f3e2d19c64a07b75ac5b}{update\-Available()} is emitted only if any new items are avaible. If set to false, \hyperlink{class_r_s_s_manager_a465f7c816a89f3e2d19c64a07b75ac5b}{update\-Available()} is emitted on every feed fetch irrespective of new items avaible in the fetch. The default value is true. \begin{DoxySeeAlso}{See also}
+is\-Updating\-On\-New\-Items\-Only(\-Q\-Url) 
+\end{DoxySeeAlso}
+
+
+Definition at line 413 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a83e1e3050e280ca5018b0bd358b91857}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!start@{start}}
+\index{start@{start}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{start}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Manager\-::start} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a83e1e3050e280ca5018b0bd358b91857}
+
+
+Starts update. Clients should call this method to start update cycle. Once called update cycle is started and feeds are fetched as per update interval. This has no effect if called on a feed which is already started or the interval is negative. 
+
+\begin{DoxyItemize}
+\item url U\-R\-L on which update cycle should start. \begin{DoxyReturn}{Returns}
+true, if successfully started or called on a feed which is started. false, if an invalid url is supplied. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a586bb2f3e73af2ac76a2bfcc73d5c0e5}{start\-All()} 
+\end{DoxySeeAlso}
+\end{DoxyItemize}
+
+
+Definition at line 494 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a586bb2f3e73af2ac76a2bfcc73d5c0e5}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!start\-All@{start\-All}}
+\index{start\-All@{start\-All}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{start\-All}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::start\-All} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a586bb2f3e73af2ac76a2bfcc73d5c0e5}
+
+
+Convience method to start all feeds. 
+
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a83e1e3050e280ca5018b0bd358b91857}{start(\-Q\-Url)} 
+\end{DoxySeeAlso}
+
+
+Definition at line 507 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a23a3fbde5eaab58f792087a7129f1840}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!stop@{stop}}
+\index{stop@{stop}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{stop}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::stop} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a23a3fbde5eaab58f792087a7129f1840}
+
+
+Stops update for feed identified by {\itshape url\/}. 
+
+\begin{DoxyReturn}{Returns}
+true if successfull. 
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This has no effect if a feed is already fetched and being processed. Hence a return value of true should not be considered as \char`\"{}fetching stopped\char`\"{}. 
+\end{DoxyNote}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a19aa6727d8b9925865a00f515c082c0d}{stop\-All()} \hyperlink{class_r_s_s_manager_a83e1e3050e280ca5018b0bd358b91857}{start()} \hyperlink{class_r_s_s_manager_a586bb2f3e73af2ac76a2bfcc73d5c0e5}{start\-All()} \hyperlink{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}{update()} \hyperlink{class_r_s_s_manager_a54cc44949de7b572cdd01bebf7ea4f6c}{update\-All()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 465 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a19aa6727d8b9925865a00f515c082c0d}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!stop\-All@{stop\-All}}
+\index{stop\-All@{stop\-All}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{stop\-All}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::stop\-All} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a19aa6727d8b9925865a00f515c082c0d}
+
+
+Stops all feed updates. 
+
+\begin{DoxyNote}{Note}
+This has no effect if a feed is already fetched and being processed. 
+\end{DoxyNote}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a23a3fbde5eaab58f792087a7129f1840}{stop(\-Q\-Url)} 
+\end{DoxySeeAlso}
+
+
+Definition at line 475 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a6b15afc171af4ed4a51aa67f599edb40}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!storage\-Path@{storage\-Path}}
+\index{storage\-Path@{storage\-Path}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{storage\-Path}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Manager\-::storage\-Path} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_r_s_s_manager_a6b15afc171af4ed4a51aa67f599edb40}
+Returns storage path where feed related data can be stored. Clients need to remove this path when uninstalling in platforms like Harmattan.
+
+base\-Path is $<$storagepath$>$/$<$appname$>$/tmp Storage path for different platforms... 1.\-Symbian is $<$privatefolder$>$ 2.\-Harmattan is /home/user/.local/share//data/$<$appname$>$ 3.\-Others same as Q\-Core\-Application\-::application\-Dir\-Path()
+
+For example in harmattan if the application name is \char`\"{}\-Tech\-News\char`\"{} then storage\-Path would return /home/user/.local/share//data/\-Tech\-News 
+
+Definition at line 78 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!update@{update}}
+\index{update@{update}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{update}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::update} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}
+Updates the feed on demand irresptive of interval. Interval is not restarted. Hence a feed with negative interval is also updated. Use this method for an on demand update. \begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a54cc44949de7b572cdd01bebf7ea4f6c}{update\-All()}, \hyperlink{class_r_s_s_manager_a83e1e3050e280ca5018b0bd358b91857}{start(\-Q\-Url)}, \hyperlink{class_r_s_s_manager_a586bb2f3e73af2ac76a2bfcc73d5c0e5}{start\-All()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 400 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a54cc44949de7b572cdd01bebf7ea4f6c}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!update\-All@{update\-All}}
+\index{update\-All@{update\-All}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{update\-All}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::update\-All} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a54cc44949de7b572cdd01bebf7ea4f6c}
+
+
+Updates all feeds which are added so far. Order of update is undefined. If such an order is required prefer to use \hyperlink{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}{update(\-Q\-Url)} 
+
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_manager_a80026b696e3feb8414c8601f63185a17}{update(\-Q\-Url)} 
+\end{DoxySeeAlso}
+
+
+Definition at line 388 of file rssmanager.\-cpp.
+
+\hypertarget{class_r_s_s_manager_a465f7c816a89f3e2d19c64a07b75ac5b}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!update\-Available@{update\-Available}}
+\index{update\-Available@{update\-Available}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{update\-Available}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Manager\-::update\-Available} (
+\begin{DoxyParamCaption}
+\item[{Q\-Url}]{url, }
+\item[{int}]{new\-Items\-Count}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}signal\mbox{]}}}}\label{class_r_s_s_manager_a465f7c816a89f3e2d19c64a07b75ac5b}
+
+
+Signal is emitted when new feed content is available. 
+
+\begin{DoxyItemize}
+\item url Subscription U\-R\-L on which new feed content is available. \item new\-Items\-Count Number of feed items that are newly added after update. \end{DoxyItemize}
+\hypertarget{class_r_s_s_manager_a2852ac2857292b9faaa3fb8a32ad8f9b}{\index{R\-S\-S\-Manager@{R\-S\-S\-Manager}!urls@{urls}}
+\index{urls@{urls}!RSSManager@{R\-S\-S\-Manager}}
+\subsubsection[{urls}]{\setlength{\rightskip}{0pt plus 5cm}Q\-List$<$ Q\-Url $>$ {\bf R\-S\-S\-Manager\-::urls} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_manager_a2852ac2857292b9faaa3fb8a32ad8f9b}
+
+
+Returns all U\-R\-Ls of all feeds added so far. 
+
+\begin{DoxySeeAlso}{See also}
+feed() 
+
+feeds() 
+\end{DoxySeeAlso}
+
+
+Definition at line 363 of file rssmanager.\-cpp.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+rssmanager/rssmanager.\-h\item 
+rssmanager/rssmanager.\-cpp\end{DoxyCompactItemize}

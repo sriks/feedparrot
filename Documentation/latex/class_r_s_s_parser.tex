@@ -1,0 +1,482 @@
+\hypertarget{class_r_s_s_parser}{\section{R\-S\-S\-Parser Class Reference}
+\label{class_r_s_s_parser}\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}}
+}
+
+
+\hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser} is a special xml parser for R\-S\-S feeds. It is based on X\-Query as backend. It is very light weight as it does not own the source data. Using \hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser} requires some basic knowledge of R\-S\-S elements. It suports R\-S\-S Specification \href{http://www.rssboard.org/rss-specification}{\tt http\-://www.\-rssboard.\-org/rss-\/specification}.  
+
+
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}{R\-S\-S\-Element} \{ \\*
+{\bfseries title}, 
+{\bfseries link}, 
+{\bfseries description}, 
+{\bfseries pub\-Date}, 
+\\*
+{\bfseries language}, 
+{\bfseries last\-Build\-Date}, 
+{\bfseries generator}, 
+{\bfseries copyright}, 
+\\*
+{\bfseries skip\-Hours}, 
+{\bfseries skip\-Days}, 
+{\bfseries author}, 
+{\bfseries creator}, 
+\\*
+{\bfseries comments}, 
+{\bfseries guid}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E bool \hyperlink{class_r_s_s_parser_a0d8ac4522e80b24d8ad4b82757ba8490}{is\-Valid} () const 
+\begin{DoxyCompactList}\small\item\em Validates parser. Returns true if parser is valid. Parser is valid if a readable non empty source is set using \hyperlink{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}{set\-Source}. \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E void \hyperlink{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}{set\-Source} (Q\-I\-O\-Device $\ast$xml\-Source)
+\begin{DoxyCompactList}\small\item\em set R\-S\-S data source. Sets xml source to be parsed using \hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser}. The source should be opened atleast in Q\-I\-O\-Device\-::\-Read\-Only and should be non empty. use \hyperlink{class_r_s_s_parser_a0d8ac4522e80b24d8ad4b82757ba8490}{is\-Valid()} to validate the parser after setting source \end{DoxyCompactList}\item 
+\hypertarget{class_r_s_s_parser_a2c48b78bc3dd31ba3272ff1fbb27ac35}{Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-I\-O\-Device $\ast$ {\bfseries source} () const }\label{class_r_s_s_parser_a2c48b78bc3dd31ba3272ff1fbb27ac35}
+
+\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-Url \hyperlink{class_r_s_s_parser_a19db1bd2bf2b86f39c83b1516f390c3f}{image\-Url} ()
+\begin{DoxyCompactList}\small\item\em Experimental A\-P\-I to set a filename as source. \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-String \hyperlink{class_r_s_s_parser_a6c15515c743ecaf311851dbfb4fa1f0c}{channel\-Element} (\hyperlink{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}{R\-S\-S\-Element} a\-Element)
+\begin{DoxyCompactList}\small\item\em queries a channel element \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-String \hyperlink{class_r_s_s_parser_a04057a7945bc6575050d4afa5c68c881}{channel\-Element} (Q\-String user\-Element)
+\begin{DoxyCompactList}\small\item\em queries a channel element provided as a string \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-String \hyperlink{class_r_s_s_parser_adfad03c83d5a7a433c999a15b0ef1244}{item\-Element} (int item\-Index, \hyperlink{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}{R\-S\-S\-Element} a\-Element)
+\begin{DoxyCompactList}\small\item\em queries an item element \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-String \hyperlink{class_r_s_s_parser_a3ac593ea0a5ea915d41db53df06dccb2}{item\-Element} (int item\-Index, Q\-String user\-Element)
+\begin{DoxyCompactList}\small\item\em queries an item element provided as string \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-String\-List \hyperlink{class_r_s_s_parser_a101a710297658df267686d60fc8b224a}{item\-Elements} (\hyperlink{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}{R\-S\-S\-Element} a\-Element)
+\begin{DoxyCompactList}\small\item\em Convinience method to query all items for the element. \end{DoxyCompactList}\item 
+\hypertarget{class_r_s_s_parser_aeb0e0b9d41605f398ed70b4a95c63b7b}{Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-String\-List {\bfseries item\-Elements} (Q\-String user\-Element)}\label{class_r_s_s_parser_aeb0e0b9d41605f398ed70b4a95c63b7b}
+
+\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-String\-List \hyperlink{class_r_s_s_parser_a207fae9001e240065c2d600d3638ce89}{category} (int item\-Index)
+\begin{DoxyCompactList}\small\item\em Returns categories of a particular item in feed. \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E Q\-List$<$ Q\-String\-List $>$ \hyperlink{class_r_s_s_parser_ab9398ef4aea9f70266590998c232f9a8}{categories} ()
+\begin{DoxyCompactList}\small\item\em Convinience method to query categories of all items. \end{DoxyCompactList}\item 
+Q\-\_\-\-I\-N\-V\-O\-K\-A\-B\-L\-E int \hyperlink{class_r_s_s_parser_a0c492d66b7680715c9f9fac92a3c06c5}{count} ()
+\begin{DoxyCompactList}\small\item\em Returns count of all items in the feed. \end{DoxyCompactList}\item 
+void \hyperlink{class_r_s_s_parser_ac6e01abe6e0e849c3f9ee327b31cfd40}{invalidate\-Cache} ()
+\item 
+\hypertarget{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{bool \hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error} () const }\label{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}
+
+\begin{DoxyCompactList}\small\item\em returns true if the latest query resulted in error. \end{DoxyCompactList}\item 
+static Q\-String \hyperlink{class_r_s_s_parser_ab88730a31215283d223cd509fd172f54}{decode\-Html} (const Q\-String \&encoded\-Html)
+\item 
+\hypertarget{class_r_s_s_parser_aee520755a65761ee2804921a9ce1dc33}{Q\-String {\bfseries execute\-Query} (const Q\-String \&a\-Query)}\label{class_r_s_s_parser_aee520755a65761ee2804921a9ce1dc33}
+
+\item 
+\hypertarget{class_r_s_s_parser_afa2ea2c5c5e123383bc9e958c7adfa3c}{Q\-String\-List {\bfseries execute\-Query\-As\-List} (const Q\-String \&a\-Query)}\label{class_r_s_s_parser_afa2ea2c5c5e123383bc9e958c7adfa3c}
+
+\item 
+\hypertarget{class_r_s_s_parser_a983707ca1ea33a9bc84c71163c3f3ddb}{Q\-String {\bfseries enum\-To\-String} (\hyperlink{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}{R\-S\-S\-Parser\-::\-R\-S\-S\-Element} a\-Element)}\label{class_r_s_s_parser_a983707ca1ea33a9bc84c71163c3f3ddb}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_r_s_s_parser_ac67372ef138fd40acfc22bcc3eee7133}{{\bfseries R\-S\-S\-Parser} (Q\-Object $\ast$parent=0)}\label{class_r_s_s_parser_ac67372ef138fd40acfc22bcc3eee7133}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser} is a special xml parser for R\-S\-S feeds. It is based on X\-Query as backend. It is very light weight as it does not own the source data. Using \hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser} requires some basic knowledge of R\-S\-S elements. It suports R\-S\-S Specification \href{http://www.rssboard.org/rss-specification}{\tt http\-://www.\-rssboard.\-org/rss-\/specification}. 
+
+\hypertarget{class_r_s_s_parser_source}{}\subsection{Setting source}\label{class_r_s_s_parser_source}
+R\-S\-S Source can be set using \hyperlink{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}{set\-Source}.
+
+
+\begin{DoxyCode}
+    QRSSParser parser;
+    QFile sourceFile("rss.xml"); // file in which rss feed is collected/stored.
+    if(source.open(QIODevice::ReadOnly))
+    {
+       // set source
+       parser.setSource(sourceFile);
+
+       // use parser
+    }
+    sourceFile.close();
+\end{DoxyCode}
+
+
+\par
+ or
+
+Q\-Buffer can also be used in \hyperlink{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}{set\-Source}. 
+\begin{DoxyCode}
+    QString sourceXml;
+    QBuffer buffer(sourceXml.toUtf8());
+    if(buffer.open(QIODevice::ReadOnly)) // ensure buffer is opened in read
+       mode
+    {
+        parser.setSource(&buffer);
+        if(parser.isValid())
+        {
+        // use parser
+        }
+    }
+    buffer.close();
+\end{DoxyCode}
+\hypertarget{class_r_s_s_parser_usage}{}\subsection{Usage}\label{class_r_s_s_parser_usage}
+Usage of \hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser} is designed around R\-S\-S Specification \href{http://www.rssboard.org/rss-specification}{\tt http\-://www.\-rssboard.\-org/rss-\/specification} \begin{DoxyItemize}
+\item \hyperlink{class_r_s_s_parser_a6c15515c743ecaf311851dbfb4fa1f0c}{channel\-Element} is used to query channel elements \item \hyperlink{class_r_s_s_parser_adfad03c83d5a7a433c999a15b0ef1244}{item\-Element} is used to query item elements \item some special methods like \hyperlink{class_r_s_s_parser_a19db1bd2bf2b86f39c83b1516f390c3f}{image\-Url}, item\-Count, \hyperlink{class_r_s_s_parser_a207fae9001e240065c2d600d3638ce89}{category}, \hyperlink{class_r_s_s_parser_ab9398ef4aea9f70266590998c232f9a8}{categories} can be used to query other elements. \par
+ R\-S\-S elements can be specified using \hyperlink{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}{R\-S\-S\-Parser\-::\-R\-S\-S\-Element} 
+\begin{DoxyCode}
+    QRSSParser parser;
+    QFile sourceFile("rss.xml"); // file in which rss feed is collected/stored.
+    if(source.open(QIODevice::ReadOnly))
+    {
+       // set source
+       parser.setSource(sourceFile);
+
+       if(parser.isValid())
+       {
+       // get name of channel
+       QString channelname = parser.channelElement(RSSParser::title);
+
+       // get channel image
+       QUrl imageUrl = parser.imageUrl();
+
+       // get count of items
+       int count = parser.itemCount();
+
+       // get title of first item
+       QString title = parser.itemElement(0,RSSParser::title);
+       }
+    }
+    sourceFile.close();
+\end{DoxyCode}
+\end{DoxyItemize}
+\hypertarget{class_r_s_s_parser_error}{}\subsection{Error Handling}\label{class_r_s_s_parser_error}
+Parsing error in the backend (X\-Query) can be found using \hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error}.
+
+
+\begin{DoxyCode}
+    if(parser.isValid())
+    {
+        // querying out of bounds item
+        QString title = parser.itemElement(35,RSSParser::title);
+
+        if(parser.isError())
+        {
+            // some error in request.
+        }
+    }
+\end{DoxyCode}
+ \hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error} is reflects error state of the latest request only. 
+
+Definition at line 10 of file rssparser.\-h.
+
+
+
+\subsection{Member Enumeration Documentation}
+\hypertarget{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!R\-S\-S\-Element@{R\-S\-S\-Element}}
+\index{R\-S\-S\-Element@{R\-S\-S\-Element}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{R\-S\-S\-Element}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf R\-S\-S\-Parser\-::\-R\-S\-S\-Element}}}\label{class_r_s_s_parser_a7abe04d86afbba935a94443444685310}
+Enum describing different R\-S\-S elements. 
+
+Definition at line 19 of file rssparser.\-h.
+
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_r_s_s_parser_ab9398ef4aea9f70266590998c232f9a8}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!categories@{categories}}
+\index{categories@{categories}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{categories}]{\setlength{\rightskip}{0pt plus 5cm}Q\-List$<$ Q\-String\-List $>$ {\bf R\-S\-S\-Parser\-::categories} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_ab9398ef4aea9f70266590998c232f9a8}
+
+
+Convinience method to query categories of all items. 
+
+\begin{DoxyReturn}{Returns}
+returns empty list in case of error. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()}, \hyperlink{class_r_s_s_parser_a207fae9001e240065c2d600d3638ce89}{category()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 256 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a207fae9001e240065c2d600d3638ce89}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!category@{category}}
+\index{category@{category}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{category}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String\-List {\bf R\-S\-S\-Parser\-::category} (
+\begin{DoxyParamCaption}
+\item[{int}]{item\-Index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a207fae9001e240065c2d600d3638ce89}
+
+
+Returns categories of a particular item in feed. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em item\-Index} & Index of intrest \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+returns empty Q\-String\-List if no such item exists or in case of error 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()}, \hyperlink{class_r_s_s_parser_ab9398ef4aea9f70266590998c232f9a8}{categories()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 245 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a6c15515c743ecaf311851dbfb4fa1f0c}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!channel\-Element@{channel\-Element}}
+\index{channel\-Element@{channel\-Element}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{channel\-Element}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Parser\-::channel\-Element} (
+\begin{DoxyParamCaption}
+\item[{{\bf R\-S\-S\-Element}}]{element}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a6c15515c743ecaf311851dbfb4fa1f0c}
+
+
+queries a channel element 
+
+
+\begin{DoxyParams}{Parameters}
+{\em element} & Element of intrest \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+If no such element exist returns empty Q\-String. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 182 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a04057a7945bc6575050d4afa5c68c881}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!channel\-Element@{channel\-Element}}
+\index{channel\-Element@{channel\-Element}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{channel\-Element}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Parser\-::channel\-Element} (
+\begin{DoxyParamCaption}
+\item[{Q\-String}]{user\-Element}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a04057a7945bc6575050d4afa5c68c881}
+
+
+queries a channel element provided as a string 
+
+
+\begin{DoxyParams}{Parameters}
+{\em user\-Element} & Element of intrest \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+If no such element exist returns empty Q\-String. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 192 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a0c492d66b7680715c9f9fac92a3c06c5}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!count@{count}}
+\index{count@{count}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{count}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf R\-S\-S\-Parser\-::count} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a0c492d66b7680715c9f9fac92a3c06c5}
+
+
+Returns count of all items in the feed. 
+
+\begin{DoxyAttention}{Attention}
+In X\-Query item count starts from 1. 
+\end{DoxyAttention}
+\begin{DoxyReturn}{Returns}
+count of items 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 269 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_ab88730a31215283d223cd509fd172f54}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!decode\-Html@{decode\-Html}}
+\index{decode\-Html@{decode\-Html}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{decode\-Html}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Parser\-::decode\-Html} (
+\begin{DoxyParamCaption}
+\item[{const Q\-String \&}]{encoded\-Html}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}static, slot\mbox{]}}}}\label{class_r_s_s_parser_ab88730a31215283d223cd509fd172f54}
+Decodes to H\-T\-M\-L 
+
+Definition at line 329 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a19db1bd2bf2b86f39c83b1516f390c3f}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!image\-Url@{image\-Url}}
+\index{image\-Url@{image\-Url}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{image\-Url}]{\setlength{\rightskip}{0pt plus 5cm}Q\-Url {\bf R\-S\-S\-Parser\-::image\-Url} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a19db1bd2bf2b86f39c83b1516f390c3f}
+
+
+Experimental A\-P\-I to set a filename as source. 
+
+returns U\-R\-L of channel image 
+
+Definition at line 173 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_ac6e01abe6e0e849c3f9ee327b31cfd40}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!invalidate\-Cache@{invalidate\-Cache}}
+\index{invalidate\-Cache@{invalidate\-Cache}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{invalidate\-Cache}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Parser\-::invalidate\-Cache} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_ac6e01abe6e0e849c3f9ee327b31cfd40}
+Invalidates any cached results. Use this method if the supplied source is updated without using \hyperlink{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}{set\-Source()} 
+
+Definition at line 281 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a0d8ac4522e80b24d8ad4b82757ba8490}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!is\-Valid@{is\-Valid}}
+\index{is\-Valid@{is\-Valid}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{is\-Valid}]{\setlength{\rightskip}{0pt plus 5cm}bool {\bf R\-S\-S\-Parser\-::is\-Valid} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a0d8ac4522e80b24d8ad4b82757ba8490}
+
+
+Validates parser. Returns true if parser is valid. Parser is valid if a readable non empty source is set using \hyperlink{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}{set\-Source}. 
+
+\begin{DoxyReturn}{Returns}
+true if valid 
+\end{DoxyReturn}
+
+
+Definition at line 138 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_adfad03c83d5a7a433c999a15b0ef1244}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!item\-Element@{item\-Element}}
+\index{item\-Element@{item\-Element}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{item\-Element}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Parser\-::item\-Element} (
+\begin{DoxyParamCaption}
+\item[{int}]{item\-Index, }
+\item[{{\bf R\-S\-S\-Element}}]{element}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_adfad03c83d5a7a433c999a15b0ef1244}
+
+
+queries an item element 
+
+
+\begin{DoxyParams}{Parameters}
+{\em item\-Index} & Index of the item in the feed \\
+\hline
+{\em element} & Element of intrest \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+If no such element exist returns empty Q\-String. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_a101a710297658df267686d60fc8b224a}{item\-Elements()}, \hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 202 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a3ac593ea0a5ea915d41db53df06dccb2}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!item\-Element@{item\-Element}}
+\index{item\-Element@{item\-Element}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{item\-Element}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String {\bf R\-S\-S\-Parser\-::item\-Element} (
+\begin{DoxyParamCaption}
+\item[{int}]{item\-Index, }
+\item[{Q\-String}]{user\-Element}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a3ac593ea0a5ea915d41db53df06dccb2}
+
+
+queries an item element provided as string 
+
+
+\begin{DoxyParams}{Parameters}
+{\em item\-Index} & Index of the item in the feed \\
+\hline
+{\em user\-Element} & Element of intrest \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+If no such element exist returns empty Q\-String. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_a101a710297658df267686d60fc8b224a}{item\-Elements()}, \hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 214 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a101a710297658df267686d60fc8b224a}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!item\-Elements@{item\-Elements}}
+\index{item\-Elements@{item\-Elements}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{item\-Elements}]{\setlength{\rightskip}{0pt plus 5cm}Q\-String\-List {\bf R\-S\-S\-Parser\-::item\-Elements} (
+\begin{DoxyParamCaption}
+\item[{{\bf R\-S\-S\-Element}}]{element}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a101a710297658df267686d60fc8b224a}
+
+
+Convinience method to query all items for the element. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em element} & Element of intrest \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+If no such element exist returns empty Q\-String\-List.
+\end{DoxyReturn}
+For example to query all titles in the feed 
+\begin{DoxyCode}
+    QStringList allTitles = parser.itemElements(RSSParser::title);
+\end{DoxyCode}
+
+
+For categories use special method \hyperlink{class_r_s_s_parser_a207fae9001e240065c2d600d3638ce89}{category()} \hyperlink{class_r_s_s_parser_ab9398ef4aea9f70266590998c232f9a8}{categories()} \begin{DoxySeeAlso}{See also}
+\hyperlink{class_r_s_s_parser_adfad03c83d5a7a433c999a15b0ef1244}{item\-Element()}, item\-Count(), \hyperlink{class_r_s_s_parser_a2565557c7f7d5b348a4c2137d6916fcb}{is\-Error()} 
+\end{DoxySeeAlso}
+
+
+Definition at line 230 of file rssparser.\-cpp.
+
+\hypertarget{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}{\index{R\-S\-S\-Parser@{R\-S\-S\-Parser}!set\-Source@{set\-Source}}
+\index{set\-Source@{set\-Source}!RSSParser@{R\-S\-S\-Parser}}
+\subsubsection[{set\-Source}]{\setlength{\rightskip}{0pt plus 5cm}void {\bf R\-S\-S\-Parser\-::set\-Source} (
+\begin{DoxyParamCaption}
+\item[{Q\-I\-O\-Device $\ast$}]{xml\-Source}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily  \mbox{[}slot\mbox{]}}}}\label{class_r_s_s_parser_a61ed20107ba616368c053eb61a99ba9d}
+
+
+set R\-S\-S data source. Sets xml source to be parsed using \hyperlink{class_r_s_s_parser}{R\-S\-S\-Parser}. The source should be opened atleast in Q\-I\-O\-Device\-::\-Read\-Only and should be non empty. use \hyperlink{class_r_s_s_parser_a0d8ac4522e80b24d8ad4b82757ba8490}{is\-Valid()} to validate the parser after setting source 
+
+
+\begin{DoxyParams}{Parameters}
+{\em xml\-Source} & source of xml \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 152 of file rssparser.\-cpp.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+rssparser/rssparser.\-h\item 
+rssparser/rssparser.\-cpp\end{DoxyCompactItemize}
